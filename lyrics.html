@@ -755,130 +755,73 @@ release release release
 </div>
 
 <script>
-// =============================================
-// Supabase設定
-// =============================================
 const SUPABASE_URL = 'https://pxgzisfqcrcexzmyscgf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4Z3ppc2ZxY3JjZXh6bXlzY2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NTIzODEsImV4cCI6MjA4OTMyODM4MX0.zt-TU6QN9WNetbJSXlNvIEAmMggX0of9J27hfYFngN8';
+const H = {'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY};
 
 const api = {
-  headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
   async getAll() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/songs?select=*&order=sort_order.asc,id.asc`, { headers: this.headers });
-    return res.json();
+    const r = await fetch(SUPABASE_URL+'/rest/v1/songs?select=*&order=sort_order.asc,id.asc',{headers:H});
+    return r.json();
   },
-  async insert(song) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/songs`, {
-      method: 'POST', headers: { ...this.headers, 'Prefer': 'return=representation' },
-      body: JSON.stringify(song)
-    });
-    return res.json();
+  async insert(s) {
+    const r = await fetch(SUPABASE_URL+'/rest/v1/songs',{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(s)});
+    return r.json();
   },
-  async update(id, song) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/songs?id=eq.${id}`, {
-      method: 'PATCH', headers: { ...this.headers, 'Prefer': 'return=representation' },
-      body: JSON.stringify(song)
-    });
-    return res.json();
+  async update(id,s) {
+    const r = await fetch(SUPABASE_URL+'/rest/v1/songs?id=eq.'+id,{method:'PATCH',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(s)});
+    return r.json();
   },
   async delete(id) {
-    await fetch(`${SUPABASE_URL}/rest/v1/songs?id=eq.${id}`, { method: 'DELETE', headers: this.headers });
+    await fetch(SUPABASE_URL+'/rest/v1/songs?id=eq.'+id,{method:'DELETE',headers:H});
   },
-  async updateOrder(id, sort_order) {
-    await fetch(`${SUPABASE_URL}/rest/v1/songs?id=eq.${id}`, {
-      method: 'PATCH', headers: this.headers,
-      body: JSON.stringify({ sort_order })
-    });
+  async updateOrder(id,sort_order) {
+    await fetch(SUPABASE_URL+'/rest/v1/songs?id=eq.'+id,{method:'PATCH',headers:H,body:JSON.stringify({sort_order})});
   }
 };
 
 let songs = [];
 let activeTag = [];
 
-function esc(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-function allTags() {
-  const set = new Set();
-  songs.forEach(s => (s.tags||[]).forEach(t => set.add(t)));
-  return [...set];
-}
-
-// =============================================
-// データ変換（DB形式 → 画面形式）
-// =============================================
 function dbToSong(row) {
   let tags = [];
   try {
-    if (Array.isArray(row.tags)) {
-      tags = row.tags;
-    } else if (typeof row.tags === 'string') {
-      const trimmed = row.tags.trim();
-      if (trimmed.startsWith('[')) {
-        tags = JSON.parse(trimmed);
-      } else {
-        tags = trimmed ? [trimmed] : [];
-      }
-    }
+    if (Array.isArray(row.tags)) tags = row.tags;
+    else if (typeof row.tags === 'string') tags = JSON.parse(row.tags);
   } catch(e) { tags = []; }
-  return {
-    id: row.id,
-    title: row.title || '',
-    date: row.date || '',
-    tags,
-    ytUrl: row.yt_url || '#',
-    lyrics: row.lyrics || '',
-    sort_order: row.sort_order || 0
-  };
+  return {id:row.id,title:row.title||'',date:row.date||'',tags,ytUrl:row.yt_url||'#',lyrics:row.lyrics||'',sort_order:row.sort_order||0};
 }
 
 function songToDb(s) {
-  return {
-    title: s.title,
-    date: s.date,
-    tags: JSON.stringify(s.tags),
-    yt_url: s.ytUrl || '#',
-    lyrics: s.lyrics,
-    sort_order: s.sort_order || 0
-  };
+  return {title:s.title,date:s.date,tags:JSON.stringify(s.tags),yt_url:s.ytUrl||'#',lyrics:s.lyrics,sort_order:s.sort_order||0};
 }
 
-// =============================================
-// 表示ロジック
-// =============================================
+function allTags(){const set=new Set();songs.forEach(s=>(s.tags||[]).forEach(t=>set.add(t)));return [...set];}
+
 function renderFilterTags() {
-  const c = document.getElementById('filterTags');
-  c.innerHTML = '';
-  const all = document.createElement('button');
-  all.className = 'filter-tag' + (activeTag.length === 0 ? ' active' : '');
-  all.textContent = 'ALL';
-  all.onclick = () => { activeTag = []; renderAll(); };
-  c.appendChild(all);
-  allTags().forEach(tag => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-tag' + (activeTag.includes(tag) ? ' active' : '');
-    btn.textContent = tag;
-    btn.onclick = () => {
-      if (activeTag.includes(tag)) activeTag = activeTag.filter(t => t !== tag);
-      else activeTag = [...activeTag, tag];
-      renderAll();
-    };
+  const c=document.getElementById('filterTags');c.innerHTML='';
+  const all=document.createElement('button');
+  all.className='filter-tag'+(activeTag.length===0?' active':'');all.textContent='ALL';
+  all.onclick=()=>{activeTag=[];renderAll();};c.appendChild(all);
+  allTags().forEach(tag=>{
+    const btn=document.createElement('button');
+    btn.className='filter-tag'+(activeTag.includes(tag)?' active':'');btn.textContent=tag;
+    btn.onclick=()=>{if(activeTag.includes(tag))activeTag=activeTag.filter(t=>t!==tag);else activeTag=[...activeTag,tag];renderAll();};
     c.appendChild(btn);
   });
 }
 
+let gridSortable=null;
 function renderGrid(list) {
-  const grid = document.getElementById('songGrid');
-  grid.innerHTML = '';
-  if (!list.length) { grid.innerHTML = '<div class="empty">NO SONGS FOUND</div>'; return; }
-  list.forEach((s, i) => {
-    const card = document.createElement('div');
-    card.className = 'song-card';
-    card.dataset.id = s.id;
-    const preview = (s.lyrics?.slice(0,80) + '…') || '';
-    const hasUrl = s.ytUrl && s.ytUrl !== '#';
-    card.innerHTML = `
+  const grid=document.getElementById('songGrid');grid.innerHTML='';
+  if(!list.length){grid.innerHTML='<div class="empty">NO SONGS FOUND</div>';return;}
+  list.forEach((s,i)=>{
+    const card=document.createElement('div');card.className='song-card';card.dataset.id=s.id;
+    const preview=(s.lyrics?.slice(0,80)+'…')||'';
+    const hasUrl=s.ytUrl&&s.ytUrl!=='#';
+    card.innerHTML=`
       <div class="card-header">
         <span class="card-num">TRACK ${String(i+1).padStart(2,'0')}</span>
         <span class="card-title">${esc(s.title)}</span>
@@ -887,102 +830,63 @@ function renderGrid(list) {
       <div class="card-tags">${(s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
       <div class="card-preview">${esc(preview)}</div>
       <div class="card-footer">
-        ${hasUrl
-          ? `<a class="yt-link" href="${esc(s.ytUrl)}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>YouTube Music</a>`
-          : `<span style="font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--text-dim);">URL未設定</span>`
-        }
+        ${hasUrl?`<a class="yt-link" href="${esc(s.ytUrl)}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>YouTube Music</a>`:`<span style="font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--text-dim);">URL未設定</span>`}
         <button class="expand-btn" onclick="openModal(${s.id})">歌詞を見る →</button>
       </div>`;
-    card.onclick = () => openModal(s.id);
-    grid.appendChild(card);
+    card.onclick=()=>openModal(s.id);grid.appendChild(card);
   });
-  const isFiltered = activeTag.length > 0 || document.getElementById('searchInput').value.trim();
-  if (!isFiltered) {
-    if (gridSortable) gridSortable.destroy();
-    gridSortable = Sortable.create(grid, {
-      animation: 150, ghostClass:'sortable-ghost', dragClass:'sortable-drag',
-      delay:100, delayOnTouchOnly:true,
-      async onEnd() {
-        const newOrder = [...grid.querySelectorAll('.song-card')].map(el => parseInt(el.dataset.id));
-        songs = newOrder.map(id => songs.find(s => s.id === id));
-        for (let i = 0; i < songs.length; i++) {
-          await api.updateOrder(songs[i].id, i + 1);
-        }
+  const isFiltered=activeTag.length>0||document.getElementById('searchInput').value.trim();
+  if(!isFiltered){
+    if(gridSortable)gridSortable.destroy();
+    gridSortable=Sortable.create(grid,{animation:150,ghostClass:'sortable-ghost',dragClass:'sortable-drag',delay:100,delayOnTouchOnly:true,
+      async onEnd(){
+        const newOrder=[...grid.querySelectorAll('.song-card')].map(el=>parseInt(el.dataset.id));
+        songs=newOrder.map(id=>songs.find(s=>s.id===id));
+        for(let i=0;i<songs.length;i++) await api.updateOrder(songs[i].id,i+1);
         renderAll();
-        if (document.getElementById('adminPanel').classList.contains('open')) renderAdminList();
+        if(document.getElementById('adminPanel').classList.contains('open'))renderAdminList();
       }
     });
-  } else {
-    if (gridSortable) { gridSortable.destroy(); gridSortable = null; }
-  }
+  } else {if(gridSortable){gridSortable.destroy();gridSortable=null;}}
 }
 
 function renderAll() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let list = [...songs];
-  if (activeTag.length > 0) list = list.filter(s => (s.tags||[]).some(t => activeTag.includes(t)));
-  if (q) list = list.filter(s => s.title.toLowerCase().includes(q) || (s.lyrics||'').toLowerCase().includes(q));
-  renderGrid(list);
-  renderFilterTags();
-  document.getElementById('totalCount').textContent = songs.length;
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  let list=[...songs];
+  if(activeTag.length>0)list=list.filter(s=>(s.tags||[]).some(t=>activeTag.includes(t)));
+  if(q)list=list.filter(s=>s.title.toLowerCase().includes(q)||(s.lyrics||'').toLowerCase().includes(q));
+  renderGrid(list);renderFilterTags();
+  document.getElementById('totalCount').textContent=songs.length;
 }
 
-// =============================================
-// モーダル
-// =============================================
 function openModal(id) {
-  const s = songs.find(x => x.id === id);
-  if (!s) return;
-  document.getElementById('modalTitle').textContent = s.title;
-  document.getElementById('modalDate').textContent = s.date;
-  document.getElementById('modalTags').innerHTML = (s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
-  const lnk = document.getElementById('modalYtLink');
-  const hasUrl = s.ytUrl && s.ytUrl !== '#';
-  lnk.href = hasUrl ? s.ytUrl : '#';
-  lnk.className = 'yt-link-lg' + (hasUrl ? '' : ' disabled');
-  document.getElementById('modalBody').innerHTML = `<div class="lyrics-text">${esc(s.lyrics)}</div>`;
-  document.getElementById('modalOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  const s=songs.find(x=>x.id===id);if(!s)return;
+  document.getElementById('modalTitle').textContent=s.title;
+  document.getElementById('modalDate').textContent=s.date;
+  document.getElementById('modalTags').innerHTML=(s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  const lnk=document.getElementById('modalYtLink');const hasUrl=s.ytUrl&&s.ytUrl!=='#';
+  lnk.href=hasUrl?s.ytUrl:'#';lnk.className='yt-link-lg'+(hasUrl?'':' disabled');
+  document.getElementById('modalBody').innerHTML=`<div class="lyrics-text">${esc(s.lyrics)}</div>`;
+  document.getElementById('modalOverlay').classList.add('open');document.body.style.overflow='hidden';
 }
-function closeFull() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function closeModal(e) {
-  if (e.target === document.getElementById('modalOverlay')) closeFull();
-}
+function closeFull(){document.getElementById('modalOverlay').classList.remove('open');document.body.style.overflow='';}
+function closeModal(e){if(e.target===document.getElementById('modalOverlay'))closeFull();}
 
-// =============================================
-// 管理画面
-// =============================================
-let editingId = null;
-let adminSortable = null;
-let gridSortable = null;
+let editingId=null,adminSortable=null;
 
 function toggleAdmin() {
-  const p = document.getElementById('adminPanel');
-  const b = document.getElementById('adminToggleBtn');
-  const isOpen = p.classList.contains('open');
-  if (isOpen) {
-    p.classList.remove('open');
-    b.textContent = '管理画面を開く';
-    b.classList.remove('active');
-    b.style.display = 'none';
-    return;
-  }
-  const pw = prompt('パスワードを入力してね');
-  if (pw === null) return;
-  if (pw !== 'take1410') { alert('パスワードが違うよ！'); return; }
-  p.classList.add('open');
-  b.textContent = '管理画面を閉じる';
-  b.classList.add('active');
-  renderAdminList();
+  const p=document.getElementById('adminPanel'),b=document.getElementById('adminToggleBtn');
+  const isOpen=p.classList.contains('open');
+  if(isOpen){p.classList.remove('open');b.textContent='管理画面を開く';b.classList.remove('active');b.style.display='none';return;}
+  const pw=prompt('パスワードを入力してね');if(pw===null)return;
+  if(pw!=='take1410'){alert('パスワードが違うよ！');return;}
+  p.classList.add('open');b.textContent='管理画面を閉じる';b.classList.add('active');renderAdminList();
 }
 
 function renderAdminList() {
-  const c = document.getElementById('adminSongList');
-  if (!songs.length) { c.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">まだ曲がありません</div>'; return; }
-  c.innerHTML = songs.map((s,i) => `
+  const c=document.getElementById('adminSongList');
+  if(!songs.length){c.innerHTML='<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">まだ曲がありません</div>';return;}
+  c.innerHTML=songs.map((s,i)=>`
     <div class="admin-song-row" data-id="${s.id}">
       <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
       <span class="admin-song-num">${String(i+1).padStart(2,'0')}</span>
@@ -991,548 +895,104 @@ function renderAdminList() {
       <button class="btn-sm btn-edit" onclick="openEditForm(${s.id})">編集</button>
       <button class="btn-sm btn-del" onclick="deleteSong(${s.id})">削除</button>
     </div>`).join('');
-  if (adminSortable) adminSortable.destroy();
-  adminSortable = Sortable.create(c, {
-    handle:'.drag-handle', animation:150, ghostClass:'sortable-ghost', dragClass:'sortable-drag',
-    async onEnd() {
-      const newOrder = [...c.querySelectorAll('.admin-song-row')].map(el => parseInt(el.dataset.id));
-      songs = newOrder.map(id => songs.find(s => s.id === id));
-      for (let i = 0; i < songs.length; i++) {
-        await api.updateOrder(songs[i].id, i + 1);
-      }
-      renderAdminList();
-      renderAll();
+  if(adminSortable)adminSortable.destroy();
+  adminSortable=Sortable.create(c,{handle:'.drag-handle',animation:150,ghostClass:'sortable-ghost',dragClass:'sortable-drag',
+    async onEnd(){
+      const newOrder=[...c.querySelectorAll('.admin-song-row')].map(el=>parseInt(el.dataset.id));
+      songs=newOrder.map(id=>songs.find(s=>s.id===id));
+      for(let i=0;i<songs.length;i++) await api.updateOrder(songs[i].id,i+1);
+      renderAdminList();renderAll();
     }
   });
 }
 
-function openAddForm() {
-  editingId = null;
-  document.getElementById('formTitle').textContent = '新しい曲を追加';
-  document.getElementById('fTitle').value = '';
-  document.getElementById('fDate').value = new Date().toISOString().slice(0,10);
-  document.getElementById('fTags').value = '';
-  document.getElementById('fUrl').value = '';
-  document.getElementById('fLyrics').value = '';
-  document.getElementById('songForm').style.display = 'block';
-  document.getElementById('addNewWrap').style.display = 'none';
+function openAddForm(){
+  editingId=null;document.getElementById('formTitle').textContent='新しい曲を追加';
+  document.getElementById('fTitle').value='';document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('fTags').value='';document.getElementById('fUrl').value='';document.getElementById('fLyrics').value='';
+  document.getElementById('songForm').style.display='block';document.getElementById('addNewWrap').style.display='none';
   document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
 }
 
-function openEditForm(id) {
-  const s = songs.find(x => x.id === id);
-  if (!s) return;
-  editingId = id;
-  document.getElementById('formTitle').textContent = '編集：' + s.title;
-  document.getElementById('fTitle').value = s.title;
-  document.getElementById('fDate').value = s.date;
-  document.getElementById('fTags').value = (s.tags||[]).join(', ');
-  document.getElementById('fUrl').value = (s.ytUrl === '#') ? '' : s.ytUrl;
-  document.getElementById('fLyrics').value = s.lyrics;
-  document.getElementById('songForm').style.display = 'block';
-  document.getElementById('addNewWrap').style.display = 'none';
+function openEditForm(id){
+  const s=songs.find(x=>x.id===id);if(!s)return;editingId=id;
+  document.getElementById('formTitle').textContent='編集：'+s.title;
+  document.getElementById('fTitle').value=s.title;document.getElementById('fDate').value=s.date;
+  document.getElementById('fTags').value=(s.tags||[]).join(', ');
+  document.getElementById('fUrl').value=s.ytUrl==='#'?'':s.ytUrl;document.getElementById('fLyrics').value=s.lyrics;
+  document.getElementById('songForm').style.display='block';document.getElementById('addNewWrap').style.display='none';
   document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
 }
 
-function cancelForm() {
-  document.getElementById('songForm').style.display = 'none';
-  document.getElementById('addNewWrap').style.display = 'block';
-  editingId = null;
-}
+function cancelForm(){document.getElementById('songForm').style.display='none';document.getElementById('addNewWrap').style.display='block';editingId=null;}
 
-async function saveSong() {
-  const title  = document.getElementById('fTitle').value.trim();
-  const date   = document.getElementById('fDate').value;
-  const tags   = document.getElementById('fTags').value.split(',').map(t=>t.trim()).filter(Boolean);
-  const url    = document.getElementById('fUrl').value.trim();
-  const lyrics = document.getElementById('fLyrics').value.trim();
-  if (!title) { showToast('タイトルを入力してね！'); return; }
+async function saveSong(){
+  const title=document.getElementById('fTitle').value.trim();const date=document.getElementById('fDate').value;
+  const tags=document.getElementById('fTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const url=document.getElementById('fUrl').value.trim();const lyrics=document.getElementById('fLyrics').value.trim();
+  if(!title){showToast('タイトルを入力してね！');return;}
   showToast('保存中…');
-  const dbData = { title, date, tags: JSON.stringify(tags), yt_url: url || '#', lyrics };
-  if (editingId !== null) {
-    await api.update(editingId, dbData);
-  } else {
-    const maxOrder = songs.length ? Math.max(...songs.map(s => s.sort_order||0)) : 0;
-    await api.insert({ ...dbData, sort_order: maxOrder + 1 });
-  }
-  songs = (await api.getAll()).map(dbToSong);
-  cancelForm();
-  renderAdminList();
-  renderAll();
-  renderSidebar();
-  showToast(editingId !== null ? '更新したよ！' : '追加したよ！');
-  editingId = null;
+  const dbData={title,date,tags:JSON.stringify(tags),yt_url:url||'#',lyrics};
+  if(editingId!==null){await api.update(editingId,dbData);}
+  else{const maxOrder=songs.length?Math.max(...songs.map(s=>s.sort_order||0)):0;await api.insert({...dbData,sort_order:maxOrder+1});}
+  songs=(await api.getAll()).map(dbToSong);
+  cancelForm();renderAdminList();renderAll();renderSidebar();
+  showToast(editingId!==null?'更新したよ！':'追加したよ！');editingId=null;
 }
 
-async function deleteSong(id) {
-  const s = songs.find(x => x.id === id);
-  if (!s || !confirm(`「${s.title}」を削除していい？`)) return;
-  await api.delete(id);
-  songs = songs.filter(x => x.id !== id);
-  renderAdminList();
-  renderAll();
-  renderSidebar();
-  showToast('削除したよ！');
+async function deleteSong(id){
+  const s=songs.find(x=>x.id===id);if(!s||!confirm(`「${s.title}」を削除していい？`))return;
+  await api.delete(id);songs=songs.filter(x=>x.id!==id);
+  renderAdminList();renderAll();renderSidebar();showToast('削除したよ！');
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
-// =============================================
-// サイドバー
-// =============================================
-function toggleSidebar() {
-  const s = document.getElementById('sidebar');
-  const o = document.getElementById('sidebarOverlay');
-  const b = document.getElementById('hamburgerBtn');
-  if (s.classList.contains('open')) { closeSidebar(); return; }
-  s.classList.add('open'); o.classList.add('open'); b.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  renderSidebar();
+function toggleSidebar(){
+  const s=document.getElementById('sidebar'),o=document.getElementById('sidebarOverlay'),b=document.getElementById('hamburgerBtn');
+  if(s.classList.contains('open')){closeSidebar();return;}
+  s.classList.add('open');o.classList.add('open');b.classList.add('open');document.body.style.overflow='hidden';renderSidebar();
 }
-
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-  document.getElementById('hamburgerBtn').classList.remove('open');
-  document.body.style.overflow = '';
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');
+  document.getElementById('hamburgerBtn').classList.remove('open');document.body.style.overflow='';
 }
-
-function renderSidebar() {
-  const tagsEl = document.getElementById('sidebarTags');
-  const tags = [...new Set(songs.flatMap(s => s.tags||[]))];
-  tagsEl.innerHTML = `<button class="sidebar-tag${activeTag.length === 0 ? ' active' : ''}" data-tag="">ALL</button>` +
-    tags.map(t => `<button class="sidebar-tag${activeTag.includes(t) ? ' active' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
-  tagsEl.querySelectorAll('.sidebar-tag').forEach(btn => {
-    btn.addEventListener('click', () => setSidebarTag(btn.dataset.tag === '' ? null : btn.dataset.tag));
+function renderSidebar(){
+  const tagsEl=document.getElementById('sidebarTags');
+  const tags=[...new Set(songs.flatMap(s=>s.tags||[]))];
+  tagsEl.innerHTML=`<button class="sidebar-tag${activeTag.length===0?' active':''}" data-tag="">ALL</button>`+
+    tags.map(t=>`<button class="sidebar-tag${activeTag.includes(t)?' active':''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
+  tagsEl.querySelectorAll('.sidebar-tag').forEach(btn=>{
+    btn.addEventListener('click',()=>setSidebarTag(btn.dataset.tag===''?null:btn.dataset.tag));
   });
-  const filtered = activeTag.length > 0 ? songs.filter(s => (s.tags||[]).some(t => activeTag.includes(t))) : songs;
-  const listEl = document.getElementById('sidebarSongList');
-  listEl.innerHTML = filtered.map((s, i) => `
+  const filtered=activeTag.length>0?songs.filter(s=>(s.tags||[]).some(t=>activeTag.includes(t))):songs;
+  document.getElementById('sidebarSongList').innerHTML=filtered.map((s,i)=>`
     <div class="sidebar-song-item" onclick="sidebarOpenSong(${s.id})">
       <span class="sidebar-song-num">${String(i+1).padStart(2,'0')}</span>
       <span class="sidebar-song-name">${esc(s.title)}</span>
-      <span class="sidebar-song-tag">${esc((s.tags||[])[0] || '')}</span>
+      <span class="sidebar-song-tag">${esc((s.tags||[])[0]||'')}</span>
     </div>`).join('');
 }
-
-function setSidebarTag(tag) {
-  if (tag === null) activeTag = [];
-  else if (activeTag.includes(tag)) activeTag = activeTag.filter(t => t !== tag);
-  else activeTag = [...activeTag, tag];
-  renderAll();
-  renderSidebar();
+function setSidebarTag(tag){
+  if(tag===null)activeTag=[];else if(activeTag.includes(tag))activeTag=activeTag.filter(t=>t!==tag);else activeTag=[...activeTag,tag];
+  renderAll();renderSidebar();
 }
+function sidebarOpenSong(id){closeSidebar();setTimeout(()=>openModal(id),300);}
 
-function sidebarOpenSong(id) {
-  closeSidebar();
-  setTimeout(() => openModal(id), 300);
-}
+document.getElementById('sidebarSearch').addEventListener('input',function(){document.getElementById('searchInput').value=this.value;renderAll();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeFull();closeSidebar();}});
+document.getElementById('searchInput').addEventListener('input',renderAll);
 
-document.getElementById('sidebarSearch').addEventListener('input', function() {
-  document.getElementById('searchInput').value = this.value;
-  renderAll();
+let keyBuffer='';
+document.addEventListener('keydown',e=>{
+  keyBuffer+=e.key;if(keyBuffer.length>4)keyBuffer=keyBuffer.slice(-4);
+  if(keyBuffer==='6969'){keyBuffer='';document.getElementById('adminToggleBtn').style.display='block';toggleAdmin();}
 });
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFull(); closeSidebar(); } });
-document.getElementById('searchInput').addEventListener('input', renderAll);
-
-// 隠し管理画面ショートカット（6969）
-let keyBuffer = '';
-document.addEventListener('keydown', e => {
-  keyBuffer += e.key;
-  if (keyBuffer.length > 4) keyBuffer = keyBuffer.slice(-4);
-  if (keyBuffer === '6969') {
-    keyBuffer = '';
-    const btn = document.getElementById('adminToggleBtn');
-    btn.style.display = 'block';
-    toggleAdmin();
-  }
-});
-
-// =============================================
-// 起動
-// =============================================
-(async () => {
-  document.getElementById('songGrid').innerHTML = '<div class="empty" style="opacity:0.5;">読み込み中…</div>';
-  songs = (await api.getAll()).map(dbToSong);
+(async()=>{
+  document.getElementById('songGrid').innerHTML='<div class="empty" style="opacity:0.5;">読み込み中…</div>';
+  songs=(await api.getAll()).map(dbToSong);
   renderAll();
 })();
 </script>
-
-</body></html>,"date":"2026-03-13","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"Rebuild\n\n燃やし尽くした　全てを燃やした\n残ったのは　灰と息だけ\n\nそれでいい　それでいい\nここからまた　始めればいい\n\n\n奪われた夜も　裏切りの朝も\n全部くべてやれ　この炎に\n痛ければ痛いほど　翼になる\n灰の中でしか生まれないものがある\n\n\nRebuild Rebuild Rebuild\n何度でも錬成すればいい\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ 空が高くなる\nまた羽ばたく　夜明けへ\n\n\n折れた夢も 散った日々も\n全てが今の俺の糧\n無駄なものなんて 一つもなかった\n灰は新たな翼となって生まれ変わる\n\n\nRebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild \nここからまた始めればいい\n\n何度でも描きなおせ　心の地図よ\n灰を糧々に　生まれ変われ\n\n\nRebuild Rebuild Rebuild\nまだ終われない\n\nRebuild Rebuild Rebuild\nここからまたはじまる\n\n何度でもやり直せ　魂の錬成よ\n新たな翼で　羽ばたいてゆけ\n\n\nRebuild Rebuild Rebuild\n何度でも錬成すればいい\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n\nRebuild ....."},{"id":4,"title":"伽藍の鳥（Garan-no-Tori）","date":"2026-03-15","tags":["Dark Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"伽藍の鳥 (Garan-no-Tori)\n\n拍手喝采、昨日の絶頂\n突き落とされて　泥を舐めた\n「君のため」なんて　反吐が出るような\n甘い毒薬　飲み干した午後\n\n期待という名の　重い枷\n外れた時には　骨もバラバラ\n真っ白な灰に　降り積もる\n誰かの笑い声　耳を塞いだ\n\n\n壊れたなら　壊れたままでいい\n歪なピースを　研ぎ澄ませ\n心臓の音だけが　唯一の正解\n……さあ、カウントを始めようか。\n\n\n咲け！　奈落の底で　黒く気高く\n奪われた声を　雷鳴に変えて\n正義も悪も　振り切った先の\n私だけの夜を　支配してやる\n予定調和の　天国なんていらない\nこの地獄こそが　私の玉座だ\n\n\nお利口さんの　フリはもう飽きた\n鏡に映る　虚像を叩き割れ\n「普通」という名の　集団リンチ\n不適合の烙印　勲章に変えて\n\nあーだこーだ　外野のノイズ\nBPMに乗せて　シュレッダーにポイッ\n一回死んだら　失うものはない\n無敵のロジック　ここに見参\n\n\n憎しみは　ガソリンになった\n悲しみは　翼になった\nだけど　それすらも　いつか燃え尽きて\n残ったのは　ただ広大な　空の青\n\n全部、置いていくんだ！\n\n\n舞え！　執着を捨てて　風の向こうへ\n許す必要もない　忘れてあげるわ\n怒りの果てに　辿り着いたのは\n凪いだ海の底　静かな覚醒\n\nもう　誰も私を　定義できない\n自由という名の　空っぽを抱いて\n\n\nさよなら　昨日までの私。\n伽藍の堂内で　鳥は笑う。\n風の音だけが　聴こえる。"},{"id":5,"title":"凪　～kenjin_Ver.～","date":"2026-03-15","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"凪　～kenjin_ver.～\n\n血泥の道を　歩いてきた\n誇りだけは捨てずに\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\nこの魂を鍛え直す\n\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild\n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n燃え尽きた灰の中で\n新たな炎が生まれる\n\n\n折れたヤイバを 炎へくべろ\n戦いは終わりじゃない\n魂がある限り\n\n\nrebuild rebuild\n立ち上がれ\n傷だらけでも\n\nrebuild rebuild rebuild\nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release\n新たな刃　鞘におさめ\n凪いだ　中をゆこう\n\nrelease release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ"},{"id":6,"title":"涅槃のレプリカ","date":"2026-03-15","tags":["Dark Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"涅槃のレプリカ\n\nガラクタの山に　突っ伏して見た空は\n不気味なほど　青くて吐き気がした\n期待　純粋　将来　そんなキラキラしたゴミに\n足を取られて　転んで　泥を啜った\n\n\nモウ終わったって　誰かの囁き\n鏡の中　ヒビ割れた僕が笑う\n完璧だったはずの　パズルのピースは\n今やただの　尖った凶器だ\n\n\nアア　どうせなら　跡形もなく\n粉々に　なっちゃえば良かったのに\n中途半端に　脈打つ鼓動が\n(マダ死んでねぇッテ)　煩く吼えるんだ\n\n\n踊れ！　絶望の淵で\n壊れた人生の　破片を握り締め\n血を流して　愛を叫べ\n綺麗事なんて　灰にして飛ばせ\n\n再起の火を灯せ　地獄の底から\n世界を塗り替える　黒い光を放て\nまだ　僕の物語は　終わらせない\n\n\n一回死んだら　無敵になった\nモラルもルールも　全部脱ぎ捨てた\n成功の果実　そんなの興味ない\n僕が欲しいのは　僕だけの正解\n(ビルドアップ！)\n\n積み上げた城が　また崩れたって\n構わないさ　何度でもビルドアップ\n可哀想なんて　同情は　いらない\nその哀れみの目を　引っくり返してやる\n\n\n嵐が過ぎたあとの　砂漠に立って\n何もかも失って　やっと気づいたんだ\n守るべきものは　外側にはなかった\n(空っぽになった器に)\n\n満ちていくのは　怒りでも　悲しみでもない\nただ　透明な自分という静寂\n\n\n放て！　覚醒の咆哮\n再構築された　魂の姿を\n\n誰に媚びることもなく　今\n一輪の毒花のように　凛と咲き誇れ\n\n成功も失敗も　すべては凪の中\n僕は僕として　この場所で生きていく\n\n\n壊れて　治して　また壊して\nそうして辿り着いた　この無彩色の境地\n悪くないさ\n\n新しい朝を　僕から始めよう"},{"id":7,"title":"凪　～al_Ver.～","date":"2026-03-15","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"凪　～al_ver.~\n\n血と泥の道 削（ハツ）り来た\n誇りだけは捨てずに\n\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\nこの魂を鍛え直す\n……さぁ、打ち上げろ！\n\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild \n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n\n燃え尽きた灰の中で\n新たな炎がうまれる\n\n\n折れたヤイバを炎へくべろ\n戦いは終わりじゃない\n魂がある限り\nキサマを超えて行く！\n\n\nrebuild rebuild\n立ち上がれ\n傷だらけでも\n\n\nrebuild rebuild rebuild\nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release release\n新たなヤイバ　サヤにおさめ\n凪の中をゆこう\n\n\nrelease release release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ\n誇れ　誇れ"},{"id":8,"title":"バグ・パレード","date":"2026-03-15","tags":["J-POP"],"ytUrl":"https://x.gd/5F2E7","lyrics":"バグ・パレード\n\n鏡の中の私\n今日も最高　無敵\n欠けてるパーツなんて一つもない\n恋愛？ 娯楽？必要ない\n\n完成された箱庭で\n私は私を愛してきた\n\n職場のデスク　隣のあなた\nただの風景だったはずなのに\n\nティータイム二度　三度\n視線がまた重なる\n\n\n「そのままでいい」\n聞き飽きたはずなのに\nあなたの声だと胸に刺さる\n\nねえ　どうして？\n完璧なはずの私が\n少しだけ揺れる\n\n\n巡り合うのは\n全知全能のサダメ\n\n恋愛下手な私が\n初めて心を預けた\n\n特別なんて\n認めないはずだった\n適度な距離が一番心地いい\n\nキミとイキヲシヨー\n\nそんな優しい世界で\n呼吸をしよう\n\n一人の空白は私の誇り\n無理に埋めない\nそれが正解\n\nあなたは私を縛らない\n私もあなたを壊さない\n\nこの絶妙な温度が今の私たち\n「愛される」より\n先に「愛し抜く」自信はあるの\n\nだけど　あなたに愛される\n時間はもっと　悪くない\n\n\n不器用な二人の\n誇り高い歩幅で\n新しい私の歴史を\n刻んでいこう\n\n\n巡り合うのは\n決まっていたんだね\n銀河みたいな時間を\n一瞬で越えて\n\nおはようも\nおやすみも\n全部　魂を震わせる\n\n適度な距離が\n一番愛おしい\n\nあなたを想うたび\n私は私を好きになる\n\n\nこの奇跡を抱きしめて\n\n出会えてよかった\n最高な私と\nあなたでいこう"},{"id":1,"title":"MY WILL, MY WORLD","date":"2025-03-15","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"MY WILL, MY WORLD！\n\nイツマデ　イツマデ\nイツマデ ドレイ ヤッテンノ？\n\n\nおりこうってなんだっけ？\n誰かの期待　背中に積んで\n息の仕方　忘れてたんだ\n\nもういいよ　その重さ全部\n今夜ここに　置いてけよ\n\n全部わたしが決める\nそれが最高でしょ\n\n\n限界なんて　誰が決めた？\nわたしのテンジョウ　わたしでコワス\nねえ行こうよ　震えてても\n全部ウワガキしてやるから\n\n\nOver ride　Over rise\n限界破裂で　塗り替えろ\n\nOver ride　Over rise\n怖い？　いいじゃん\n笑って飛び込め　シンセカイ\n\n\n正しさって何だっけ？\nてめぇのモノサシで　測んなよ\n全部わたしが　決めるんだ\n\nだから何？　いいじゃん\n元からレールなんてないからさ\n\n自分が主人公\nそれって最高でしょ\n\n\n限界なんて　関係ねぇ！\nわたしのセカイは　わたしでエガク\nねえ叫べよ　声が枯れるまで\n全部ウワガキしてやれ\n\n\nOver ride　Over rise\n限界破裂で　塗り替えろ\n\nOver ride　Over rise\n転んだ？　死ぬ以外かすり傷\n笑って飛び込め　New World\n\n\n静かに　目閉じて　Little Me\n\n……そこにいるの？\n\nチャントイルヨ\nドン　ドン　ドン！\n\nさぁ…イクよ　Open World！！\n\n\nOver ride　Over rise\nわたしの世界で　塗り替えろ！\n\nOver ride　Over rise\n限界？　ハナからなかった\n笑って行けよ　MY WORLD!!\n\nMY WILL, MY WORLD！！！"},{"id":9,"title":"こういうのでいい","date":"2026-03-15","tags":["J-POP"],"ytUrl":"https://x.gd/5F2E7","lyrics":"こういうのでいい\n\n急がなくても　いい夜だ\nコンビニ帰りの　ぬるい風\n遠回りでも　まあいいさ\n景色も少し　変わるしね\n\nあのアスファルトの　照り返しも\n今は静かに　眠ってる\n予定通りの　明日なんて\n今は考えず　歩こうか\n\n勝った負けたは　置いといて\n正解（こたえ）合わせも　後回し\n今夜はただ　飲もうか\n\nこのくらいで　このくらいで\nちょうどいいじゃないか\n笑って飲めれば\nそれでいい\n\nこのくらいで　このくらいで\n悪くないじゃないか\n肩の力を　抜いていこう\n\n\n「ぼちぼち」なんて　言い合って\nレモンサワー　開けている\n完璧じゃない　この日々が\n愛おしく思える　こんな夜もいい\n\n手に入れたもの　こぼしたもの\n数えるのを　やめてみれば\n「それもいい」と　笑えるような\n風が通り抜けていく\n\n背伸びをしても　疲れるだけさ\nハイボール　揺らすだけで\n等身大の　今の僕で\nそれだけで　十分さ\n\nこのくらいで　このくらいで\nちょうどいいじゃないか\n笑って飲めれば\nそれがいい\n\nこのくらいで　このくらいで\n悪くないじゃないか\n明日も「ぼちぼち」\nそれがいい"},{"id":10,"title":"rebuild　（ファースト）","date":"2026-03-12","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"Rebuild ファースト\n\n燃やし尽くした　全部燃やした\n残ったのは　灰と息だけ\n\nそれでいい　それでいい\nここからまた　始めればいい\n\n\n奪われた夜も　裏切りの朝も\n全部くべてやれ　この炎に\n痛ければ痛いほど　翼になる\n灰の中でしか生まれないものがある\n\n\nRebuild Rebuild Rebuild\n何度でも　作り直す\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ　空が高くなる\nまた羽ばたく　夜明けへ\nreviver\n\n折れた夢も 散った日々も\n全部が今の俺を作ってる\n無駄なものなんて 一つもなかった\nこれが俺の魂の地図\n\nRebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild Rebuild \nここからが本番だ\n\n灰になるたびに　翼が生える\nまた空へ　夜明けへ\n\n\nRebuild Rebuild Rebuild\n何度でも作り直す\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ　空が高くなる\nまた羽ばたく　夜明けへ\nreviver\n\nRebuild ....."},{"id":11,"title":"凪　（ファースト）","date":"2026-03-12","tags":["Japan Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"凪　ファースト\n\n血と泥の道を　歩いてきた\n誇りだけは捨てずに\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\n\nこの魂を鍛え直す\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild rebuild\n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n燃え尽きた灰の中で\n新たな炎が生まれる\n\n\n折れたヤイバを 炎へくべろ\n戦いは終わりじゃない\n魂がある限り\n\n\nrebuild rebuild\n立ち上がれ　傷だらけでも\n\nrebuild rebuild \nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release release\n新たな刃　鞘におさめ\n凪の中をゆく\n\nrelease release release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ"}];
-
-const STORAGE_KEY = 'lyrics_archive_songs';
-function loadSongs() {
-  // defaultSongsを常にlocalStorageに書き込んで使用する
-  saveSongsToStorage(defaultSongs);
-  return JSON.parse(JSON.stringify(defaultSongs));
-}
-function saveSongsToStorage(list) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-}
-
-let songs = loadSongs();
-let activeTag = [];
-
-function esc(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function allTags() {
-  const set = new Set();
-  songs.forEach(s => s.tags.forEach(t => set.add(t)));
-  return [...set];
-}
-
-function renderFilterTags() {
-  const c = document.getElementById('filterTags');
-  c.innerHTML = '';
-  const all = document.createElement('button');
-  all.className = 'filter-tag' + (activeTag.length === 0 ? ' active' : '');
-  all.textContent = 'ALL';
-  all.onclick = () => { activeTag = []; renderAll(); };
-  c.appendChild(all);
-  allTags().forEach(tag => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-tag' + (activeTag.includes(tag) ? ' active' : '');
-    btn.textContent = tag;
-    btn.onclick = () => {
-      if (activeTag.includes(tag)) {
-        activeTag = activeTag.filter(t => t !== tag);
-      } else {
-        activeTag = [...activeTag, tag];
-      }
-      renderAll();
-    };
-    c.appendChild(btn);
-  });
-}
-
-function renderGrid(list) {
-  const grid = document.getElementById('songGrid');
-  grid.innerHTML = '';
-  if (!list.length) { grid.innerHTML = '<div class="empty">NO SONGS FOUND</div>'; return; }
-  list.forEach((s, i) => {
-    const card = document.createElement('div');
-    card.className = 'song-card';
-    card.dataset.id = s.id;
-    const preview = (s.lyrics?.slice(0,80) + '…') || '';
-    const hasUrl = s.ytUrl && s.ytUrl !== '#';
-    card.innerHTML = `
-      <div class="card-header">
-        <span class="card-num">TRACK ${String(i+1).padStart(2,'0')}</span>
-        <span class="card-title">${esc(s.title)}</span>
-        <span class="card-date">${s.date}</span>
-      </div>
-      <div class="card-tags">${s.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
-      <div class="card-preview">${esc(preview)}</div>
-      <div class="card-footer">
-        ${hasUrl
-          ? `<a class="yt-link" href="${esc(s.ytUrl)}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>YouTube Music</a>`
-          : `<span style="font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--text-dim);">URL未設定</span>`
-        }
-        <button class="expand-btn" onclick="openModal(${s.id})">歌詞を見る →</button>
-      </div>`;
-    card.onclick = () => openModal(s.id);
-    grid.appendChild(card);
-  });
-  // 検索・絞り込みなしの全件表示時のみ並び替え有効
-  const isFiltered = activeTag.length > 0 || document.getElementById('searchInput').value.trim();
-  if (!isFiltered) {
-    if (gridSortable) gridSortable.destroy();
-    gridSortable = Sortable.create(grid, {
-      animation: 150,
-      ghostClass: 'sortable-ghost',
-      dragClass: 'sortable-drag',
-      delay: 100,
-      delayOnTouchOnly: true,
-      onEnd() {
-        const newOrder = [...grid.querySelectorAll('.song-card')].map(el => parseInt(el.dataset.id));
-        songs = newOrder.map(id => songs.find(s => s.id === id));
-        saveSongsToStorage(songs);
-        renderAll();
-        if (document.getElementById('adminPanel').classList.contains('open')) renderAdminList();
-      }
-    });
-  } else {
-    if (gridSortable) { gridSortable.destroy(); gridSortable = null; }
-  }
-}
-
-function renderAll() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let list = [...songs];
-  if (activeTag.length > 0) list = list.filter(s => s.tags.some(t => activeTag.some(a => a === t)));
-  if (q) list = list.filter(s => s.title.toLowerCase().includes(q) || s.lyrics.toLowerCase().includes(q));
-  renderGrid(list);
-  renderFilterTags();
-  document.getElementById('totalCount').textContent = songs.length;
-}
-
-// MODAL
-function openModal(id) {
-  const s = songs.find(x => x.id === id);
-  if (!s) return;
-  document.getElementById('modalTitle').textContent = s.title;
-  document.getElementById('modalDate').textContent = s.date;
-  document.getElementById('modalTags').innerHTML = s.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('');
-  const lnk = document.getElementById('modalYtLink');
-  const hasUrl = s.ytUrl && s.ytUrl !== '#';
-  lnk.href = hasUrl ? s.ytUrl : '#';
-  lnk.className = 'yt-link-lg' + (hasUrl ? '' : ' disabled');
-  document.getElementById('modalBody').innerHTML = `<div class="lyrics-text">${esc(s.lyrics)}</div>`;
-  document.getElementById('modalOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeFull() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function closeModal(e) {
-  if (e.target === document.getElementById('modalOverlay')) closeFull();
-}
-
-// ADMIN
-let editingId = null;
-
-function toggleAdmin() {
-  const p = document.getElementById('adminPanel');
-  const b = document.getElementById('adminToggleBtn');
-  const isOpen = p.classList.contains('open');
-  if (isOpen) {
-    p.classList.remove('open');
-    b.textContent = '管理画面を開く';
-    b.classList.remove('active');
-    b.style.display = 'none';
-    return;
-  }
-  const pw = prompt('パスワードを入力してね');
-  if (pw === null) return;
-  if (pw !== 'take1410') {
-    alert('パスワードが違うよ！');
-    return;
-  }
-  p.classList.add('open');
-  b.textContent = '管理画面を閉じる';
-  b.classList.add('active');
-  renderAdminList();
-}
-
-let adminSortable = null;
-let gridSortable = null;
-
-function renderAdminList() {
-  const c = document.getElementById('adminSongList');
-  if (!songs.length) { c.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">まだ曲がありません</div>'; return; }
-  c.innerHTML = songs.map((s,i) => `
-    <div class="admin-song-row" data-id="${s.id}">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">${String(i+1).padStart(2,'0')}</span>
-      <span class="admin-song-name">${esc(s.title)}</span>
-      <span class="admin-song-date">${s.date}</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(${s.id})">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(${s.id})">削除</button>
-    </div>`).join('');
-  if (adminSortable) adminSortable.destroy();
-  adminSortable = Sortable.create(c, {
-    handle: '.drag-handle',
-    animation: 150,
-    ghostClass: 'sortable-ghost',
-    dragClass: 'sortable-drag',
-    onEnd() {
-      const newOrder = [...c.querySelectorAll('.admin-song-row')].map(el => parseInt(el.dataset.id));
-      songs = newOrder.map(id => songs.find(s => s.id === id));
-      saveSongsToStorage(songs);
-      renderAdminList();
-      renderAll();
-    }
-  });
-}
-
-
-function openAddForm() {
-  editingId = null;
-  document.getElementById('formTitle').textContent = '新しい曲を追加';
-  document.getElementById('fTitle').value = '';
-  document.getElementById('fDate').value = new Date().toISOString().slice(0,10);
-  document.getElementById('fTags').value = '';
-  document.getElementById('fUrl').value = '';
-  document.getElementById('fLyrics').value = '';
-  document.getElementById('songForm').style.display = 'block';
-  document.getElementById('addNewWrap').style.display = 'none';
-  document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
-}
-
-function openEditForm(id) {
-  const s = songs.find(x => x.id === id);
-  if (!s) return;
-  editingId = id;
-  document.getElementById('formTitle').textContent = '編集：' + s.title;
-  document.getElementById('fTitle').value = s.title;
-  document.getElementById('fDate').value = s.date;
-  document.getElementById('fTags').value = s.tags.join(', ');
-  document.getElementById('fUrl').value = (s.ytUrl === '#') ? '' : s.ytUrl;
-  document.getElementById('fLyrics').value = s.lyrics;
-  document.getElementById('songForm').style.display = 'block';
-  document.getElementById('addNewWrap').style.display = 'none';
-  document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
-}
-
-function cancelForm() {
-  document.getElementById('songForm').style.display = 'none';
-  document.getElementById('addNewWrap').style.display = 'block';
-  editingId = null;
-}
-
-
-function saveSong() {
-  const title  = document.getElementById('fTitle').value.trim();
-  const date   = document.getElementById('fDate').value;
-  const tags   = document.getElementById('fTags').value.split(',').map(t=>t.trim()).filter(Boolean);
-  const url    = document.getElementById('fUrl').value.trim();
-  const lyrics = document.getElementById('fLyrics').value.trim();
-  if (!title) { showToast('タイトルを入力してね！'); return; }
-  if (editingId !== null) {
-    const idx = songs.findIndex(s => s.id === editingId);
-    if (idx !== -1) songs[idx] = { ...songs[idx], title, date, tags, ytUrl: url || '#', lyrics };
-  } else {
-    const newId = songs.length ? Math.max(...songs.map(s=>s.id)) + 1 : 1;
-    songs.push({ id: newId, title, date, tags, ytUrl: url || '#', lyrics });
-  }
-  saveSongsToStorage(songs);
-  cancelForm();
-  renderAdminList();
-  renderAll();
-  showToast(editingId !== null ? '更新したよ！' : '追加したよ！');
-  editingId = null;
-}
-
-function exportData() {
-  // トーストを消す
-  document.getElementById('toast').classList.remove('show');
-  document.getElementById('toast').textContent = '';
-  // 管理画面を閉じてからダウンロード
-  const p = document.getElementById('adminPanel');
-  const b = document.getElementById('adminToggleBtn');
-  p.classList.remove('open');
-  b.textContent = '管理画面を開く';
-  b.classList.remove('active');
-  // 現在のHTMLを取得してdefaultSongsの部分だけ書き換える
-  const currentHtml = document.documentElement.outerHTML;
-  const newData = JSON.stringify(songs);
-  const updated = currentHtml.replace(
-    /const defaultSongs = \[[\s\S]*?\];/,
-    'const defaultSongs = ' + newData + ';'
-  );
-  const blob = new Blob([updated], { type: 'text/html;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'lyrics.html';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  showToast('ダウンロードしたよ！Netlifyに上げてね');
-}
-
-function deleteSong(id) {
-  const s = songs.find(x => x.id === id);
-  if (!s || !confirm(`「${s.title}」を削除していい？`)) return;
-  songs = songs.filter(x => x.id !== id);
-  saveSongsToStorage(songs);
-  renderAdminList();
-  renderAll();
-  showToast('削除したよ！');
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// SIDEBAR
-function toggleSidebar() {
-  const s = document.getElementById('sidebar');
-  const o = document.getElementById('sidebarOverlay');
-  const b = document.getElementById('hamburgerBtn');
-  const isOpen = s.classList.contains('open');
-  if (isOpen) {
-    closeSidebar();
-  } else {
-    s.classList.add('open');
-    o.classList.add('open');
-    b.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    renderSidebar();
-  }
-}
-
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-  document.getElementById('hamburgerBtn').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-function renderSidebar() {
-  const tagsEl = document.getElementById('sidebarTags');
-  const tags = [...new Set(songs.flatMap(s => s.tags))];
-  tagsEl.innerHTML = `<button class="sidebar-tag${activeTag.length === 0 ? ' active' : ''}" data-tag="">ALL</button>` +
-    tags.map(t => `<button class="sidebar-tag${activeTag.includes(t) ? ' active' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
-  tagsEl.querySelectorAll('.sidebar-tag').forEach(btn => {
-    btn.addEventListener('click', () => setSidebarTag(btn.dataset.tag === '' ? null : btn.dataset.tag));
-  });
-  const filtered = activeTag.length > 0 ? songs.filter(s => s.tags.some(t => activeTag.some(a => a === t))) : songs;
-  const listEl = document.getElementById('sidebarSongList');
-  listEl.innerHTML = filtered.map((s, i) => `
-    <div class="sidebar-song-item" onclick="sidebarOpenSong(${s.id})">
-      <span class="sidebar-song-num">${String(i+1).padStart(2,'0')}</span>
-      <span class="sidebar-song-name">${esc(s.title)}</span>
-      <span class="sidebar-song-tag">${esc(s.tags[0] || '')}</span>
-    </div>`).join('');
-}
-
-function setSidebarTag(tag) {
-  if (tag === null) {
-    activeTag = [];
-  } else if (activeTag.includes(tag)) {
-    activeTag = activeTag.filter(t => t !== tag);
-  } else {
-    activeTag = [...activeTag, tag];
-  }
-  renderAll();
-  renderSidebar();
-}
-
-function sidebarOpenSong(id) {
-  closeSidebar();
-  setTimeout(() => openModal(id), 300);
-}
-
-document.getElementById('sidebarSearch').addEventListener('input', function() {
-  document.getElementById('searchInput').value = this.value;
-  renderAll();
-});
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFull(); closeSidebar(); } });
-document.getElementById('searchInput').addEventListener('input', renderAll);
-
-// 隠し管理画面ショートカット（6969）
-let keyBuffer = '';
-document.addEventListener('keydown', e => {
-  keyBuffer += e.key;
-  if (keyBuffer.length > 4) keyBuffer = keyBuffer.slice(-4);
-  if (keyBuffer === '6969') {
-    keyBuffer = '';
-    const btn = document.getElementById('adminToggleBtn');
-    btn.style.display = 'block';
-    toggleAdmin();
-  }
-});
-
 </body></html>
