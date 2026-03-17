@@ -425,6 +425,29 @@ img[data-xh-highlight-nextpage] {
 
 <div class="song-grid" id="songGrid"></div>
 
+<!-- LYRICS MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-meta">
+        <span class="modal-date" id="modalDate"></span>
+        <div class="card-tags" id="modalTags" style="padding:0;margin:0;"></div>
+      </div>
+      <button class="close-btn" onclick="closeFull()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <a class="yt-link-lg" id="modalYtLink" href="#" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+          <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/>
+        </svg>
+        YouTube Music で聴く
+      </a>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- HAMBURGER -->
