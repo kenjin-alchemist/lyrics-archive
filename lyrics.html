@@ -680,7 +680,11 @@ async function saveSong(){
   showToast('保存中…');
   const dbData={title,date,tags:JSON.stringify(tags),yt_url:url||'#',lyrics};
   if(editingId!==null){await api.update(editingId,dbData);}
-  else{const maxOrder=songs.length?Math.max(...songs.map(s=>s.sort_order||0)):0;await api.insert({...dbData,sort_order:maxOrder+1});}
+  else{
+    // 全曲のsort_orderを+1してから、新曲をsort_order:1で追加
+    for(const s of songs) await api.updateOrder(s.id, (s.sort_order||0)+1);
+    await api.insert({...dbData,sort_order:1});
+  }
   const savedId = editingId;
   adminFilterTag = null;
   songs=(await api.getAll()).map(dbToSong);
