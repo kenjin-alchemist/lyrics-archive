@@ -114,6 +114,9 @@
   .btn-edit:hover { background:rgba(0,212,255,0.1); }
   .btn-del { border-color:rgba(255,60,110,0.4); color:var(--accent2); }
   .btn-del:hover { background:rgba(255,60,110,0.1); }
+  .admin-filter-btn { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.15em; padding:5px 12px; border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer; text-transform:uppercase; transition:all 0.2s; }
+  .admin-filter-btn:hover { border-color:rgba(0,212,255,0.4); color:var(--text-dim); }
+  .admin-filter-btn.active { border-color:var(--accent); color:var(--accent); box-shadow:var(--glow); }
   .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
   .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
   .form-group label { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.25em; color:var(--text-dim); text-transform:uppercase; }
@@ -369,87 +372,7 @@ img[data-xh-highlight-nextpage] {
 
     <div class="admin-section-title">登録済みの曲</div>
     <div id="adminTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-    <div id="adminSongList" style="margin-bottom:16px;">
-    <div class="admin-song-row" data-id="3">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">01</span>
-      <span class="admin-song-name">Rebuild</span>
-      <span class="admin-song-date">2026-03-13</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(3)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(3)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="4">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">02</span>
-      <span class="admin-song-name">伽藍の鳥（Garan-no-Tori）</span>
-      <span class="admin-song-date">2026-03-15</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(4)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(4)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="5">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">03</span>
-      <span class="admin-song-name">凪　～kenjin_Ver.～</span>
-      <span class="admin-song-date">2026-03-15</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(5)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(5)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="6">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">04</span>
-      <span class="admin-song-name">涅槃のレプリカ</span>
-      <span class="admin-song-date">2026-03-15</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(6)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(6)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="7">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">05</span>
-      <span class="admin-song-name">凪　～al_Ver.～</span>
-      <span class="admin-song-date">2026-03-15</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(7)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(7)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="8">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">06</span>
-      <span class="admin-song-name">バグ・パレード</span>
-      <span class="admin-song-date">2026-03-15</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(8)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(8)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="1">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">07</span>
-      <span class="admin-song-name">MY WILL, MY WORLD</span>
-      <span class="admin-song-date">2025-03-15</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(1)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(1)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="9">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">08</span>
-      <span class="admin-song-name">こういうのでいい</span>
-      <span class="admin-song-date">2026-03-15</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(9)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(9)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="10">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">09</span>
-      <span class="admin-song-name">rebuild　（ファースト）</span>
-      <span class="admin-song-date">2026-03-12</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(10)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(10)">削除</button>
-    </div>
-    <div class="admin-song-row" data-id="11">
-      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
-      <span class="admin-song-num">10</span>
-      <span class="admin-song-name">凪　（ファースト）</span>
-      <span class="admin-song-date">2026-03-12</span>
-      <button class="btn-sm btn-edit" onclick="openEditForm(11)">編集</button>
-      <button class="btn-sm btn-del" onclick="deleteSong(11)">削除</button>
-    </div></div>
+    <div id="adminSongList" style="margin-bottom:16px;"></div>
     <div style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
       <div id="addNewWrap">
         <button class="btn-save" onclick="openAddForm()">＋ 新しい曲を追加</button>
@@ -691,8 +614,8 @@ function renderAdminList() {
   // タグフィルターボタン
   const filterEl = document.getElementById('adminTagFilter');
   const tags = [...new Set(songs.flatMap(s => s.tags||[]))];
-  filterEl.innerHTML = `<button class="btn-sm${adminFilterTag===null?' btn-edit':''}" onclick="setAdminFilter(null)" style="font-size:10px;padding:3px 10px;">ALL</button>` +
-    tags.map(t => `<button class="btn-sm${adminFilterTag===t?' btn-edit':''}" onclick="setAdminFilter('${t}')" style="font-size:10px;padding:3px 10px;">${esc(t)}</button>`).join('');
+  filterEl.innerHTML = `<button class="admin-filter-btn${adminFilterTag===null?' active':''}" onclick="setAdminFilter(null)">ALL</button>` +
+    tags.map(t => `<button class="admin-filter-btn${adminFilterTag===t?' active':''}" onclick="setAdminFilter('${t}')">${esc(t)}</button>`).join('');
 
   const c = document.getElementById('adminSongList');
   const filtered = adminFilterTag ? songs.filter(s => (s.tags||[]).includes(adminFilterTag)) : songs;
@@ -759,6 +682,7 @@ async function saveSong(){
   if(editingId!==null){await api.update(editingId,dbData);}
   else{const maxOrder=songs.length?Math.max(...songs.map(s=>s.sort_order||0)):0;await api.insert({...dbData,sort_order:maxOrder+1});}
   const savedId = editingId;
+  adminFilterTag = null;
   songs=(await api.getAll()).map(dbToSong);
   cancelForm();renderAdminList();renderAll();renderSidebar();
   showToast(savedId!==null?'更新したよ！':'追加したよ！');editingId=null;
