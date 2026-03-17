@@ -368,6 +368,7 @@ img[data-xh-highlight-nextpage] {
     <div class="admin-title-main">ADMIN PANEL <span>曲の追加・編集・削除</span></div>
 
     <div class="admin-section-title">登録済みの曲</div>
+    <div id="adminTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
     <div id="adminSongList" style="margin-bottom:16px;">
     <div class="admin-song-row" data-id="3">
       <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
@@ -450,11 +451,12 @@ img[data-xh-highlight-nextpage] {
       <button class="btn-sm btn-del" onclick="deleteSong(11)">削除</button>
     </div></div>
     <div style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
-      <div id="addNewWrap" style="display: block;">
+      <div id="addNewWrap">
         <button class="btn-save" onclick="openAddForm()">＋ 新しい曲を追加</button>
       </div>
-      <button class="btn-cancel" onclick="exportData()" style="border-color:var(--gold);color:var(--gold);">💾 HTMLをダウンロード（Netlify用）</button>
+      <button class="btn-cancel" onclick="exportSongData()" style="border-color:var(--gold);color:var(--gold);">📋 データをコピー（Claude共有用）</button>
     </div>
+    <div id="exportMsg" style="display:none;font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--green);letter-spacing:0.15em;margin-bottom:16px;">✓ コピーしたよ！Claudeに貼り付けてね</div>
 
     <div id="songForm" style="display: none;">
       <div class="admin-section-title" id="formTitle">編集：rebuild　（ファースト）</div>
@@ -663,6 +665,17 @@ function closeModal(e){if(e.target===document.getElementById('modalOverlay'))clo
 
 let editingId=null,adminSortable=null;
 
+function exportSongData() {
+  const data = JSON.stringify(songs, null, 2);
+  navigator.clipboard.writeText(data).then(() => {
+    const msg = document.getElementById('exportMsg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 4000);
+  }).catch(() => {
+    prompt('以下をコピーしてClaudeに貼り付けてね', data);
+  });
+}
+
 function toggleAdmin() {
   const p=document.getElementById('adminPanel'),b=document.getElementById('adminToggleBtn');
   const isOpen=p.classList.contains('open');
@@ -672,10 +685,19 @@ function toggleAdmin() {
   p.classList.add('open');b.textContent='管理画面を閉じる';b.classList.add('active');renderAdminList();
 }
 
+let adminFilterTag = null;
+
 function renderAdminList() {
-  const c=document.getElementById('adminSongList');
-  if(!songs.length){c.innerHTML='<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">まだ曲がありません</div>';return;}
-  c.innerHTML=songs.map((s,i)=>`
+  // タグフィルターボタン
+  const filterEl = document.getElementById('adminTagFilter');
+  const tags = [...new Set(songs.flatMap(s => s.tags||[]))];
+  filterEl.innerHTML = `<button class="btn-sm${adminFilterTag===null?' btn-edit':''}" onclick="setAdminFilter(null)" style="font-size:10px;padding:3px 10px;">ALL</button>` +
+    tags.map(t => `<button class="btn-sm${adminFilterTag===t?' btn-edit':''}" onclick="setAdminFilter('${t}')" style="font-size:10px;padding:3px 10px;">${esc(t)}</button>`).join('');
+
+  const c = document.getElementById('adminSongList');
+  const filtered = adminFilterTag ? songs.filter(s => (s.tags||[]).includes(adminFilterTag)) : songs;
+  if(!filtered.length){c.innerHTML='<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">該当する曲がありません</div>';return;}
+  c.innerHTML = filtered.map((s,i) => `
     <div class="admin-song-row" data-id="${s.id}">
       <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
       <span class="admin-song-num">${String(i+1).padStart(2,'0')}</span>
@@ -685,14 +707,21 @@ function renderAdminList() {
       <button class="btn-sm btn-del" onclick="deleteSong(${s.id})">削除</button>
     </div>`).join('');
   if(adminSortable)adminSortable.destroy();
-  adminSortable=Sortable.create(c,{handle:'.drag-handle',animation:150,ghostClass:'sortable-ghost',dragClass:'sortable-drag',
-    async onEnd(){
-      const newOrder=[...c.querySelectorAll('.admin-song-row')].map(el=>parseInt(el.dataset.id));
-      songs=newOrder.map(id=>songs.find(s=>s.id===id));
-      for(let i=0;i<songs.length;i++) await api.updateOrder(songs[i].id,i+1);
-      renderAdminList();renderAll();
-    }
-  });
+  if(!adminFilterTag) {
+    adminSortable=Sortable.create(c,{handle:'.drag-handle',animation:150,ghostClass:'sortable-ghost',dragClass:'sortable-drag',
+      async onEnd(){
+        const newOrder=[...c.querySelectorAll('.admin-song-row')].map(el=>parseInt(el.dataset.id));
+        songs=newOrder.map(id=>songs.find(s=>s.id===id));
+        for(let i=0;i<songs.length;i++) await api.updateOrder(songs[i].id,i+1);
+        renderAdminList();renderAll();
+      }
+    });
+  }
+}
+
+function setAdminFilter(tag) {
+  adminFilterTag = tag;
+  renderAdminList();
 }
 
 function openAddForm(){
@@ -713,7 +742,12 @@ function openEditForm(id){
   document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
 }
 
-function cancelForm(){document.getElementById('songForm').style.display='none';document.getElementById('addNewWrap').style.display='block';editingId=null;}
+function cancelForm(){
+  document.getElementById('songForm').style.display='none';
+  document.getElementById('addNewWrap').style.display='block';
+  editingId=null;
+  document.getElementById('adminSongList').scrollIntoView({behavior:'smooth'});
+}
 
 async function saveSong(){
   const title=document.getElementById('fTitle').value.trim();const date=document.getElementById('fDate').value;
@@ -724,9 +758,17 @@ async function saveSong(){
   const dbData={title,date,tags:JSON.stringify(tags),yt_url:url||'#',lyrics};
   if(editingId!==null){await api.update(editingId,dbData);}
   else{const maxOrder=songs.length?Math.max(...songs.map(s=>s.sort_order||0)):0;await api.insert({...dbData,sort_order:maxOrder+1});}
+  const savedId = editingId;
   songs=(await api.getAll()).map(dbToSong);
   cancelForm();renderAdminList();renderAll();renderSidebar();
-  showToast(editingId!==null?'更新したよ！':'追加したよ！');editingId=null;
+  showToast(savedId!==null?'更新したよ！':'追加したよ！');editingId=null;
+  // 編集した曲の行にスクロール
+  if(savedId!==null) {
+    setTimeout(()=>{
+      const row=document.querySelector(`.admin-song-row[data-id="${savedId}"]`);
+      if(row) row.scrollIntoView({behavior:'smooth',block:'center'});
+    }, 100);
+  }
 }
 
 async function deleteSong(id){
