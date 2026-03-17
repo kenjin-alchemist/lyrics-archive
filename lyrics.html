@@ -825,17 +825,25 @@ async function seedIfEmpty() {
 function dbToSong(row) {
   let tags = [];
   try {
-    if (Array.isArray(row.tags)) tags = row.tags;
-    else if (typeof row.tags === 'string') tags = JSON.parse(row.tags);
+    if (Array.isArray(row.tags)) {
+      tags = row.tags;
+    } else if (typeof row.tags === 'string') {
+      const trimmed = row.tags.trim();
+      if (trimmed.startsWith('[')) {
+        tags = JSON.parse(trimmed);
+      } else {
+        tags = trimmed ? [trimmed] : [];
+      }
+    }
   } catch(e) { tags = []; }
   return {
     id: row.id,
-    title: row.title,
-    date: row.date,
+    title: row.title || '',
+    date: row.date || '',
     tags,
     ytUrl: row.yt_url || '#',
     lyrics: row.lyrics || '',
-    sort_order: row.sort_order
+    sort_order: row.sort_order || 0
   };
 }
 
