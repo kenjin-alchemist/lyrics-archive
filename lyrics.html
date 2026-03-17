@@ -399,8 +399,16 @@ img[data-xh-highlight-nextpage] {
         </div>
       </div>
       <div class="form-group">
-        <label>タグ（カンマ区切り）</label>
-        <input type="text" id="fTags" placeholder="例：ロック, J-POP">
+        <label>タグ</label>
+        <div id="fTagsSelected" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:20px;"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="fTagsSelect" style="padding:8px 12px;flex:1;min-width:120px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;" onchange="addTagFromSelect()">
+            <option value="">既存タグを選ぶ…</option>
+          </select>
+          <input type="text" id="fTagsNew" placeholder="新規タグを入力" style="padding:8px 12px;flex:1;min-width:100px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewTag();}">
+          <button type="button" class="btn-sm btn-edit" onclick="addNewTag()" style="flex-shrink:0;">追加</button>
+        </div>
+        <input type="hidden" id="fTags">
       </div>
       <div class="form-group">
         <label>YouTube Music URL</label>
@@ -680,10 +688,58 @@ function setAdminFilter(tag) {
   renderAdminList();
 }
 
+let currentFormTags = [];
+
+function updateTagsSelectOptions() {
+  const select = document.getElementById('fTagsSelect');
+  if (!select) return;
+  const existing = allTags();
+  select.innerHTML = '<option value="">既存タグを選ぶ…</option>' +
+    existing.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+
+function addTagFromSelect() {
+  const select = document.getElementById('fTagsSelect');
+  const val = select.value.trim();
+  if (!val) return;
+  if (!currentFormTags.includes(val)) {
+    currentFormTags.push(val);
+    renderFormTags();
+  }
+  select.value = '';
+}
+
+function addNewTag() {
+  const input = document.getElementById('fTagsNew');
+  const val = input.value.trim();
+  if (!val) return;
+  if (!currentFormTags.includes(val)) {
+    currentFormTags.push(val);
+    renderFormTags();
+  }
+  input.value = '';
+}
+
+function removeFormTag(tag) {
+  currentFormTags = currentFormTags.filter(t => t !== tag);
+  renderFormTags();
+}
+
+function renderFormTags() {
+  const el = document.getElementById('fTagsSelected');
+  el.innerHTML = currentFormTags.map(t =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid rgba(201,168,76,0.4);color:var(--gold);font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;background:rgba(201,168,76,0.05);">
+      ${esc(t)}<button type="button" onclick="removeFormTag('${esc(t)}')" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;">×</button>
+    </span>`
+  ).join('');
+  document.getElementById('fTags').value = currentFormTags.join(',');
+}
+
 function openAddForm(){
   editingId=null;document.getElementById('formTitle').textContent='新しい曲を追加';
   document.getElementById('fTitle').value='';document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
-  document.getElementById('fTags').value='';document.getElementById('fUrl').value='';document.getElementById('fLyrics').value='';
+  document.getElementById('fUrl').value='';document.getElementById('fLyrics').value='';
+  currentFormTags=[];renderFormTags();updateTagsSelectOptions();
   document.getElementById('songForm').style.display='block';document.getElementById('addNewWrap').style.display='none';
   document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
 }
@@ -694,6 +750,7 @@ function openEditForm(id){
   document.getElementById('fTitle').value=s.title;document.getElementById('fDate').value=s.date;
   document.getElementById('fTags').value=(s.tags||[]).join(', ');
   document.getElementById('fUrl').value=s.ytUrl==='#'?'':s.ytUrl;document.getElementById('fLyrics').value=s.lyrics;
+  currentFormTags=[...(s.tags||[])];renderFormTags();updateTagsSelectOptions();
   document.getElementById('songForm').style.display='block';document.getElementById('addNewWrap').style.display='none';
   document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
 }
@@ -707,7 +764,7 @@ function cancelForm(){
 
 async function saveSong(){
   const title=document.getElementById('fTitle').value.trim();const date=document.getElementById('fDate').value;
-  const tags=document.getElementById('fTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const tags=currentFormTags.filter(Boolean);
   const url=document.getElementById('fUrl').value.trim();const lyrics=document.getElementById('fLyrics').value.trim();
   if(!title){showToast('タイトルを入力してね！');return;}
   showToast('保存中…');
