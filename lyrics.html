@@ -1,0 +1,1545 @@
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LYRICS ARCHIVE</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Noto+Sans+JP:wght@300;400;700&amp;family=Rajdhani:wght@300;500;700&amp;display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<style>
+  :root {
+    --bg: #080a0f;
+    --bg2: #0d1117;
+    --bg3: #13181f;
+    --accent: #00d4ff;
+    --accent2: #ff3c6e;
+    --gold: #c9a84c;
+    --text: #e8eaf0;
+    --text-dim: #6b7280;
+    --border: rgba(0,212,255,0.15);
+    --glow: 0 0 20px rgba(0,212,255,0.3);
+    --green: #00ff9d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans JP',sans-serif; min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:0; opacity:0.4;
+  }
+
+  header { position:relative; padding:60px 40px 40px; border-bottom:1px solid var(--border); overflow:hidden; }
+  header::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent); }
+  .header-bg { position:absolute; inset:0; background:radial-gradient(ellipse at 20% 50%,rgba(0,212,255,0.05) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(255,60,110,0.05) 0%,transparent 60%); pointer-events:none; }
+  .site-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(48px,8vw,96px); letter-spacing:0.12em; line-height:1; background:linear-gradient(135deg,#fff 0%,var(--accent) 50%,var(--accent2) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; position:relative; }
+  .site-subtitle { font-family:'Rajdhani',sans-serif; font-size:13px; letter-spacing:0.4em; color:var(--text-dim); margin-top:8px; text-transform:uppercase; }
+  .header-right { position:absolute; right:40px; bottom:24px; display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+  .song-count-wrap { font-family:'Rajdhani',sans-serif; font-size:12px; letter-spacing:0.2em; color:var(--text-dim); text-align:right; }
+  .song-count { color:var(--accent); font-size:28px; font-family:'Bebas Neue',sans-serif; display:block; line-height:1; }
+  .admin-btn { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.2em; padding:7px 16px; border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer; text-transform:uppercase; transition:all 0.2s; }
+  .admin-btn:hover,.admin-btn.active { border-color:var(--green); color:var(--green); box-shadow:0 0 12px rgba(0,255,157,0.2); }
+
+  .controls { padding:24px 40px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; border-bottom:1px solid var(--border); position:relative; z-index:1; }
+  .search-wrap { position:relative; flex:1; min-width:200px; }
+  .search-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-dim); }
+  input[type="text"],input[type="date"],input[type="url"],textarea {
+    background:var(--bg3); border:1px solid var(--border); color:var(--text);
+    font-family:'Noto Sans JP',sans-serif; font-size:14px; outline:none;
+    transition:border-color 0.2s,box-shadow 0.2s;
+  }
+  input:focus,textarea:focus { border-color:var(--accent); box-shadow:var(--glow); }
+  #searchInput { width:100%; padding:10px 14px 10px 42px; }
+  .filter-tags { display:flex; gap:8px; flex-wrap:wrap; }
+  .filter-tag { font-family:'Rajdhani',sans-serif; font-size:12px; letter-spacing:0.15em; padding:6px 14px; border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer; transition:all 0.2s; text-transform:uppercase; }
+  .filter-tag:hover,.filter-tag.active { border-color:var(--accent); color:var(--accent); box-shadow:var(--glow); }
+
+  .song-grid { padding:40px; display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:2px; position:relative; z-index:1; }
+  .song-card { background:var(--bg2); border:1px solid var(--border); cursor:pointer; transition:all 0.3s; position:relative; overflow:hidden; animation:fadeIn 0.5s ease forwards; opacity:0; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .song-card:nth-child(1){animation-delay:.05s}.song-card:nth-child(2){animation-delay:.10s}.song-card:nth-child(3){animation-delay:.15s}.song-card:nth-child(4){animation-delay:.20s}.song-card:nth-child(5){animation-delay:.25s}.song-card:nth-child(6){animation-delay:.30s}.song-card:nth-child(7){animation-delay:.35s}.song-card:nth-child(8){animation-delay:.40s}.song-card:nth-child(9){animation-delay:.45s}.song-card:nth-child(10){animation-delay:.50s}
+  .song-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(0,212,255,0.04) 0%,transparent 60%); opacity:0; transition:opacity 0.3s; }
+  .song-card:hover { border-color:rgba(0,212,255,0.5); box-shadow:var(--glow); transform:translateY(-2px); }
+  .song-card:hover::before { opacity:1; }
+  .card-header { padding:20px 20px 14px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .card-num { font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:0.2em; color:var(--accent); opacity:0.6; flex-shrink:0; margin-top:2px; }
+  .card-title { font-family:'Noto Sans JP',sans-serif; font-weight:700; font-size:16px; letter-spacing:0.03em; line-height:1.3; flex:1; color:#fff; }
+  .card-date { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.15em; color:var(--text-dim); flex-shrink:0; }
+  .card-tags { padding:0 20px 14px; display:flex; gap:6px; flex-wrap:wrap; }
+  .tag { font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:0.2em; padding:3px 8px; border:1px solid rgba(201,168,76,0.3); color:var(--gold); text-transform:uppercase; background:rgba(201,168,76,0.05); }
+  .card-preview { padding:0 20px 16px; font-size:12px; color:var(--text-dim); line-height:1.7; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .card-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .yt-link { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.2em; color:var(--accent2); text-decoration:none; text-transform:uppercase; display:flex; align-items:center; gap:6px; transition:color 0.2s; }
+  .yt-link:hover { color:#fff; }
+  .yt-link svg { width:16px; height:16px; }
+  .expand-btn { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.2em; color:var(--accent); background:none; border:none; cursor:pointer; text-transform:uppercase; transition:color 0.2s; }
+  .expand-btn:hover { color:#fff; }
+  .empty { grid-column:1/-1; text-align:center; padding:80px 20px; color:var(--text-dim); font-family:'Rajdhani',sans-serif; letter-spacing:0.2em; font-size:14px; }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(8,10,15,0.9); z-index:100; backdrop-filter:blur(8px); justify-content:center; align-items:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--bg2); border:1px solid var(--border); width:100%; max-width:680px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 0 60px rgba(0,212,255,0.15); animation:modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes modalIn { from{transform:scale(0.92);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal::before { content:''; display:block; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+  .modal-header { padding:28px 28px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg2); z-index:10; }
+  .modal-title { font-family:'Noto Sans JP',sans-serif; font-weight:700; font-size:26px; letter-spacing:0.03em; background:linear-gradient(90deg,#fff,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1.2; margin-bottom:10px; }
+  .modal-meta { display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+  .modal-date { font-family:'Rajdhani',sans-serif; font-size:12px; letter-spacing:0.2em; color:var(--text-dim); }
+  .close-btn { position:absolute; top:20px; right:20px; background:none; border:1px solid var(--border); color:var(--text-dim); width:32px; height:32px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+  .close-btn:hover { border-color:var(--accent2); color:var(--accent2); }
+  @media(max-width:600px) { .close-btn { top:60px; } }
+  .modal-body { padding:28px; }
+  .lyrics-block { margin-bottom:28px; }
+  .section-label { font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:0.4em; color:var(--accent); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:10px; }
+  .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+  .lyrics-text { font-size:14px; line-height:2; color:#c8cdd6; white-space:pre-line; }
+  .modal-footer { padding:20px 28px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; }
+  .yt-link-lg { font-family:'Rajdhani',sans-serif; font-size:13px; letter-spacing:0.25em; color:#fff; text-decoration:none; text-transform:uppercase; display:flex; align-items:center; gap:8px; padding:12px 24px; background:var(--accent2); transition:all 0.2s; }
+  .yt-link-lg:hover { background:#ff5a82; box-shadow:0 0 20px rgba(255,60,110,0.4); }
+  .yt-link-lg.disabled { background:var(--bg3); color:var(--text-dim); pointer-events:none; }
+
+  /* ADMIN */
+  .admin-panel { display:none; border-bottom:1px solid var(--border); position:relative; z-index:2; }
+  .admin-panel.open { display:block; }
+  .admin-panel::before { content:''; display:block; height:2px; background:linear-gradient(90deg,var(--green),transparent); }
+  .admin-inner { padding:32px 40px; }
+  .admin-section-title { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.3em; color:var(--green); text-transform:uppercase; margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid rgba(0,255,157,0.15); }
+  .admin-title-main { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.15em; color:var(--green); margin-bottom:24px; }
+  .admin-title-main span { font-size:12px; font-family:'Rajdhani',sans-serif; color:var(--text-dim); letter-spacing:0.2em; margin-left:12px; }
+  .admin-song-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid var(--border); background:var(--bg3); margin-bottom:2px; transition:border-color 0.2s; }
+  .admin-song-row:hover { border-color:rgba(0,212,255,0.3); }
+  .admin-song-num { font-family:'Bebas Neue',sans-serif; font-size:12px; color:var(--accent); opacity:0.6; width:28px; flex-shrink:0; }
+  .admin-song-name { flex:1; font-size:14px; }
+  .admin-song-date { font-family:'Rajdhani',sans-serif; font-size:11px; color:var(--text-dim); }
+  .btn-sm { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.15em; padding:5px 12px; border:1px solid; background:transparent; cursor:pointer; text-transform:uppercase; transition:all 0.2s; flex-shrink:0; }
+  .btn-edit { border-color:rgba(0,212,255,0.4); color:var(--accent); }
+  .btn-edit:hover { background:rgba(0,212,255,0.1); }
+  .btn-del { border-color:rgba(255,60,110,0.4); color:var(--accent2); }
+  .btn-del:hover { background:rgba(255,60,110,0.1); }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+  .form-group label { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.25em; color:var(--text-dim); text-transform:uppercase; }
+  .form-group input { padding:10px 14px; width:100%; }
+  .lyrics-sections { border:1px solid var(--border); }
+  .lyrics-section-row { border-bottom:1px solid var(--border); padding:12px; display:grid; grid-template-columns:150px 1fr 34px; gap:8px; align-items:start; }
+  .lyrics-section-row:last-child { border-bottom:none; }
+  .lyrics-section-row input { padding:8px 10px; width:100%; }
+  .lyrics-section-row textarea { padding:8px 10px; width:100%; min-height:100px; resize:vertical; line-height:1.7; }
+  .btn-remove-section { background:none; border:1px solid rgba(255,60,110,0.3); color:var(--accent2); cursor:pointer; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:16px; transition:all 0.2s; }
+  .btn-remove-section:hover { background:rgba(255,60,110,0.1); }
+  .btn-add-section { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.2em; padding:10px 20px; border:1px dashed rgba(0,212,255,0.3); background:transparent; color:var(--accent); cursor:pointer; text-transform:uppercase; width:100%; transition:all 0.2s; margin-top:2px; }
+  .btn-add-section:hover { border-color:var(--accent); background:rgba(0,212,255,0.05); }
+  .form-actions { display:flex; gap:12px; margin-top:24px; justify-content:flex-end; }
+  .btn-save { font-family:'Rajdhani',sans-serif; font-size:13px; letter-spacing:0.25em; padding:12px 32px; border:none; background:var(--accent); color:#000; cursor:pointer; text-transform:uppercase; font-weight:700; transition:all 0.2s; }
+  .btn-save:hover { background:#33dcff; box-shadow:var(--glow); }
+  .btn-cancel { font-family:'Rajdhani',sans-serif; font-size:13px; letter-spacing:0.25em; padding:12px 24px; border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer; text-transform:uppercase; transition:all 0.2s; }
+  .btn-cancel:hover { border-color:var(--text-dim); color:var(--text); }
+  .toast { position:fixed; bottom:32px; right:32px; background:var(--green); color:#000; font-family:'Rajdhani',sans-serif; letter-spacing:0.2em; font-size:13px; padding:12px 24px; z-index:9999; transform:translateY(80px); opacity:0; transition:all 0.3s; pointer-events:none; }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--accent); }
+
+  /* SIDEBAR */
+  .hamburger { position:fixed; top:20px; right:20px; z-index:500; background:var(--bg2); border:1px solid var(--border); width:44px; height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer; transition:all 0.2s; }
+  .hamburger:hover { border-color:var(--accent); box-shadow:var(--glow); }
+  .hamburger span { display:block; width:20px; height:2px; background:var(--text); transition:all 0.3s; }
+  .hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity:0; }
+  .hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+  @media(max-width:600px) { .hamburger { top:36px; right:16px; } }
+  .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:499; backdrop-filter:blur(4px); }
+  .sidebar-overlay.open { display:block; }
+  .sidebar { position:fixed; top:0; right:-320px; width:300px; height:100vh; background:var(--bg2); border-left:1px solid var(--border); z-index:500; overflow-y:auto; transition:right 0.3s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; }
+  .sidebar.open { right:0; }
+  .sidebar::before { content:''; display:block; height:3px; background:linear-gradient(90deg,var(--accent2),var(--accent)); flex-shrink:0; }
+  .sidebar-header { padding:24px 20px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .sidebar-artist { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.1em; background:linear-gradient(90deg,#fff,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .sidebar-sub { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.3em; color:var(--text-dim); text-transform:uppercase; margin-top:2px; }
+  .sidebar-section { padding:16px 20px 8px; }
+  .sidebar-section-title { font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:0.4em; color:var(--accent); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .sidebar-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .sidebar-search-wrap { position:relative; }
+  .sidebar-search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim); width:14px; height:14px; }
+  .sidebar-search { width:100%; background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:8px 10px 8px 32px; font-family:'Noto Sans JP',sans-serif; font-size:13px; outline:none; transition:border-color 0.2s; }
+  .sidebar-search:focus { border-color:var(--accent); }
+  .sidebar-tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .sidebar-tag { font-family:'Rajdhani',sans-serif; font-size:11px; letter-spacing:0.15em; padding:5px 12px; border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer; transition:all 0.2s; text-transform:uppercase; }
+  .sidebar-tag:hover,.sidebar-tag.active { border-color:var(--accent); color:var(--accent); box-shadow:var(--glow); }
+  .sidebar-song-list { padding:0 20px 8px; }
+  .sidebar-song-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; transition:all 0.2s; }
+  .sidebar-song-item:hover .sidebar-song-name { color:var(--accent); }
+  .sidebar-song-num { font-family:'Bebas Neue',sans-serif; font-size:11px; color:var(--accent); opacity:0.5; width:24px; flex-shrink:0; }
+  .sidebar-song-name { font-size:13px; color:var(--text); flex:1; line-height:1.3; transition:color 0.2s; }
+  .sidebar-song-tag { font-family:'Rajdhani',sans-serif; font-size:9px; letter-spacing:0.15em; padding:2px 6px; border:1px solid rgba(201,168,76,0.3); color:var(--gold); flex-shrink:0; }
+  .sidebar-footer { padding:20px; border-top:1px solid var(--border); margin-top:auto; flex-shrink:0; }
+  .sidebar-yt-link { display:flex; align-items:center; gap:8px; color:var(--accent2); text-decoration:none; font-family:'Rajdhani',sans-serif; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; transition:color 0.2s; }
+  .sidebar-yt-link:hover { color:#fff; }
+
+  .song-card.sortable-drag { opacity:0.4; }
+  .song-card.sortable-ghost { border-color:var(--accent) !important; box-shadow:var(--glow) !important; opacity:0.6; }
+  .admin-song-row.sortable-drag { opacity:0.4; }
+  .admin-song-row.sortable-ghost { border-color:var(--accent) !important; background:rgba(0,212,255,0.05) !important; }
+  .drag-handle { cursor:grab; color:var(--text-dim); font-size:16px; flex-shrink:0; padding:0 4px; user-select:none; transition:color 0.2s; }
+  .drag-handle:hover { color:var(--accent); }
+  .drag-handle:active { cursor:grabbing; }
+
+  @media(max-width:600px) {
+    header { padding:40px 20px 30px; }
+    .controls { padding:16px 20px; }
+    .song-grid { padding:20px; gap:2px; grid-template-columns:1fr; }
+    .header-right { display:none; }
+    .admin-inner { padding:20px; }
+    .form-grid { grid-template-columns:1fr; }
+    .lyrics-section-row { grid-template-columns:1fr 34px; }
+    .lyrics-section-row input { grid-column:1/-1; }
+  }
+</style>
+<script src="chrome-extension://jdimjfakmefbalaehbcfkcbkbkpmhcol/assets/prompt.js"></script><style type="text/css">/**
+ * Copyright 2011 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @author opensource@google.com
+ * @license Apache License, Version 2.0.
+ */
+
+#xh-bar {
+  border-width: 0 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 120px !important;  /* bar.css body height */
+  z-index: 2147483647 !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+          transform: translate3d(0, 0, 0) !important;
+  -webkit-transition: -webkit-transform 0.2s ease-out !important;
+  transition: -webkit-transform 0.2s ease-out !important;
+  -o-transition: transform 0.2s ease-out !important;
+  transition: transform 0.2s ease-out !important;
+  transition: transform 0.2s ease-out, -webkit-transform 0.2s ease-out !important;
+}
+
+#xh-bar.bottom {
+  top: auto !important;
+  bottom: 0 !important;
+}
+
+#xh-bar.hidden {
+  -webkit-transform: translate3d(0, -100%, 0) !important;
+          transform: translate3d(0, -100%, 0) !important;
+}
+
+#xh-bar.hidden.bottom {
+  -webkit-transform: translate3d(0, 100%, 0) !important;
+          transform: translate3d(0, 100%, 0) !important;
+}
+
+*[data-xh-highlight] {
+  background-color: #fff59d !important;
+}
+
+*[data-xh-highlight-top] {
+  background-color: #f5ff9d !important;
+}
+
+*[data-xh-highlight-nextpage] {
+  background-color: #f59dff !important;
+}
+
+img[data-xh-highlight] {
+  opacity: 0.5 !important;
+}
+
+img[data-xh-highlight-top] {
+  opacity: 0.5 !important;
+}
+
+img[data-xh-highlight-nextpage] {
+  opacity: 0.5 !important;
+}
+</style><script src="chrome-extension://jdimjfakmefbalaehbcfkcbkbkpmhcol/assets/prompt.js"></script><style type="text/css">/**
+ * Copyright 2011 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @author opensource@google.com
+ * @license Apache License, Version 2.0.
+ */
+
+#xh-bar {
+  border-width: 0 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 120px !important;  /* bar.css body height */
+  z-index: 2147483647 !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+          transform: translate3d(0, 0, 0) !important;
+  -webkit-transition: -webkit-transform 0.2s ease-out !important;
+  transition: -webkit-transform 0.2s ease-out !important;
+  -o-transition: transform 0.2s ease-out !important;
+  transition: transform 0.2s ease-out !important;
+  transition: transform 0.2s ease-out, -webkit-transform 0.2s ease-out !important;
+}
+
+#xh-bar.bottom {
+  top: auto !important;
+  bottom: 0 !important;
+}
+
+#xh-bar.hidden {
+  -webkit-transform: translate3d(0, -100%, 0) !important;
+          transform: translate3d(0, -100%, 0) !important;
+}
+
+#xh-bar.hidden.bottom {
+  -webkit-transform: translate3d(0, 100%, 0) !important;
+          transform: translate3d(0, 100%, 0) !important;
+}
+
+*[data-xh-highlight] {
+  background-color: #fff59d !important;
+}
+
+*[data-xh-highlight-top] {
+  background-color: #f5ff9d !important;
+}
+
+*[data-xh-highlight-nextpage] {
+  background-color: #f59dff !important;
+}
+
+img[data-xh-highlight] {
+  opacity: 0.5 !important;
+}
+
+img[data-xh-highlight-top] {
+  opacity: 0.5 !important;
+}
+
+img[data-xh-highlight-nextpage] {
+  opacity: 0.5 !important;
+}
+</style></head>
+<body style="">
+
+<header>
+  <div class="header-bg"></div>
+  <div class="site-title">LYRICS ARCHIVE</div>
+  <div class="site-subtitle">kenjin_alchemist — Official Lyrics</div>
+  <div class="header-right">
+    <div class="song-count-wrap">
+      <span class="song-count" id="totalCount">10</span>SONGS
+    </div>
+    <button class="admin-btn" id="adminToggleBtn" onclick="toggleAdmin()" style="display:none;">管理画面を開く</button>
+  </div>
+</header>
+
+<!-- ADMIN PANEL -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-inner">
+    <div class="admin-title-main">ADMIN PANEL <span>曲の追加・編集・削除</span></div>
+
+    <div class="admin-section-title">登録済みの曲</div>
+    <div id="adminSongList" style="margin-bottom:16px;">
+    <div class="admin-song-row" data-id="3">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">01</span>
+      <span class="admin-song-name">Rebuild</span>
+      <span class="admin-song-date">2026-03-13</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(3)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(3)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="4">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">02</span>
+      <span class="admin-song-name">伽藍の鳥（Garan-no-Tori）</span>
+      <span class="admin-song-date">2026-03-15</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(4)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(4)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="5">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">03</span>
+      <span class="admin-song-name">凪　～kenjin_Ver.～</span>
+      <span class="admin-song-date">2026-03-15</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(5)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(5)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="6">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">04</span>
+      <span class="admin-song-name">涅槃のレプリカ</span>
+      <span class="admin-song-date">2026-03-15</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(6)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(6)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="7">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">05</span>
+      <span class="admin-song-name">凪　～al_Ver.～</span>
+      <span class="admin-song-date">2026-03-15</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(7)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(7)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="8">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">06</span>
+      <span class="admin-song-name">バグ・パレード</span>
+      <span class="admin-song-date">2026-03-15</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(8)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(8)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="1">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">07</span>
+      <span class="admin-song-name">MY WILL, MY WORLD</span>
+      <span class="admin-song-date">2025-03-15</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(1)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(1)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="9">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">08</span>
+      <span class="admin-song-name">こういうのでいい</span>
+      <span class="admin-song-date">2026-03-15</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(9)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(9)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="10">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">09</span>
+      <span class="admin-song-name">rebuild　（ファースト）</span>
+      <span class="admin-song-date">2026-03-12</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(10)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(10)">削除</button>
+    </div>
+    <div class="admin-song-row" data-id="11">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">10</span>
+      <span class="admin-song-name">凪　（ファースト）</span>
+      <span class="admin-song-date">2026-03-12</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(11)">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(11)">削除</button>
+    </div></div>
+    <div style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
+      <div id="addNewWrap" style="display: block;">
+        <button class="btn-save" onclick="openAddForm()">＋ 新しい曲を追加</button>
+      </div>
+      <button class="btn-cancel" onclick="exportData()" style="border-color:var(--gold);color:var(--gold);">💾 HTMLをダウンロード（Netlify用）</button>
+    </div>
+
+    <div id="songForm" style="display: none;">
+      <div class="admin-section-title" id="formTitle">編集：rebuild　（ファースト）</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>曲タイトル</label>
+          <input type="text" id="fTitle" placeholder="例：MY WILL, MY WORLD">
+        </div>
+        <div class="form-group">
+          <label>作成日</label>
+          <input type="date" id="fDate">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>タグ（カンマ区切り）</label>
+        <input type="text" id="fTags" placeholder="例：ロック, J-POP">
+      </div>
+      <div class="form-group">
+        <label>YouTube Music URL</label>
+        <input type="text" id="fUrl" placeholder="例：https://music.youtube.com/...">
+      </div>
+      <div class="form-group">
+        <label>歌詞（そのままコピペでOK）</label>
+        <textarea id="fLyrics" placeholder="ここに歌詞をまるごと貼り付けてね…" style="min-height:300px; padding:12px 14px; width:100%; line-height:1.8;"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="cancelForm()">キャンセル</button>
+        <button class="btn-save" onclick="saveSong()">保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input type="text" id="searchInput" placeholder="曲名・歌詞を検索…">
+  </div>
+  <div class="filter-tags" id="filterTags"><button class="filter-tag">ALL</button><button class="filter-tag active">Rock</button><button class="filter-tag active">Dark Rock</button><button class="filter-tag">J-POP</button><button class="filter-tag">Japan Rock</button></div>
+</div>
+
+<div class="song-grid" id="songGrid"><div class="song-card" data-id="3">
+      <div class="card-header">
+        <span class="card-num">TRACK 01</span>
+        <span class="card-title">Rebuild</span>
+        <span class="card-date">2026-03-13</span>
+      </div>
+      <div class="card-tags"><span class="tag">Rock</span></div>
+      <div class="card-preview">Rebuild
+
+燃やし尽くした　全てを燃やした
+残ったのは　灰と息だけ
+
+それでいい　それでいい
+ここからまた　始めればいい
+
+
+奪われた夜も　裏切りの朝も
+…</div>
+      <div class="card-footer">
+        <a class="yt-link" href="https://x.gd/5F2E7" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg>YouTube Music</a>
+        <button class="expand-btn" onclick="openModal(3)">歌詞を見る →</button>
+      </div></div><div class="song-card" data-id="4">
+      <div class="card-header">
+        <span class="card-num">TRACK 02</span>
+        <span class="card-title">伽藍の鳥（Garan-no-Tori）</span>
+        <span class="card-date">2026-03-15</span>
+      </div>
+      <div class="card-tags"><span class="tag">Dark Rock</span></div>
+      <div class="card-preview">伽藍の鳥 (Garan-no-Tori)
+
+拍手喝采、昨日の絶頂
+突き落とされて　泥を舐めた
+「君のため」なんて　反吐が出るような
+甘い毒薬　飲み干した午後
+
+…</div>
+      <div class="card-footer">
+        <a class="yt-link" href="https://x.gd/5F2E7" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg>YouTube Music</a>
+        <button class="expand-btn" onclick="openModal(4)">歌詞を見る →</button>
+      </div></div><div class="song-card" data-id="5">
+      <div class="card-header">
+        <span class="card-num">TRACK 03</span>
+        <span class="card-title">凪　～kenjin_Ver.～</span>
+        <span class="card-date">2026-03-15</span>
+      </div>
+      <div class="card-tags"><span class="tag">Rock</span></div>
+      <div class="card-preview">凪　～kenjin_ver.～
+
+血泥の道を　歩いてきた
+誇りだけは捨てずに
+幾度も倒れた夜でも
+カタナはまだ折れてはいない
+
+
+折れた夢　散った日々
+すべて斬…</div>
+      <div class="card-footer">
+        <a class="yt-link" href="https://x.gd/5F2E7" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg>YouTube Music</a>
+        <button class="expand-btn" onclick="openModal(5)">歌詞を見る →</button>
+      </div></div><div class="song-card" data-id="6">
+      <div class="card-header">
+        <span class="card-num">TRACK 04</span>
+        <span class="card-title">涅槃のレプリカ</span>
+        <span class="card-date">2026-03-15</span>
+      </div>
+      <div class="card-tags"><span class="tag">Dark Rock</span></div>
+      <div class="card-preview">涅槃のレプリカ
+
+ガラクタの山に　突っ伏して見た空は
+不気味なほど　青くて吐き気がした
+期待　純粋　将来　そんなキラキラしたゴミに
+足を取られて　転んで　泥を啜…</div>
+      <div class="card-footer">
+        <a class="yt-link" href="https://x.gd/5F2E7" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg>YouTube Music</a>
+        <button class="expand-btn" onclick="openModal(6)">歌詞を見る →</button>
+      </div></div><div class="song-card" data-id="7">
+      <div class="card-header">
+        <span class="card-num">TRACK 05</span>
+        <span class="card-title">凪　～al_Ver.～</span>
+        <span class="card-date">2026-03-15</span>
+      </div>
+      <div class="card-tags"><span class="tag">Rock</span></div>
+      <div class="card-preview">凪　～al_ver.~
+
+血と泥の道 削（ハツ）り来た
+誇りだけは捨てずに
+
+幾度も倒れた夜でも
+カタナはまだ折れてはいない
+
+
+折れた夢　散った日々
+すべて斬…</div>
+      <div class="card-footer">
+        <a class="yt-link" href="https://x.gd/5F2E7" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg>YouTube Music</a>
+        <button class="expand-btn" onclick="openModal(7)">歌詞を見る →</button>
+      </div></div><div class="song-card" data-id="1">
+      <div class="card-header">
+        <span class="card-num">TRACK 06</span>
+        <span class="card-title">MY WILL, MY WORLD</span>
+        <span class="card-date">2025-03-15</span>
+      </div>
+      <div class="card-tags"><span class="tag">Rock</span></div>
+      <div class="card-preview">MY WILL, MY WORLD！
+
+イツマデ　イツマデ
+イツマデ ドレイ ヤッテンノ？
+
+
+おりこうってなんだっけ？
+誰かの期待　背中に積んで
+息の仕方　忘…</div>
+      <div class="card-footer">
+        <a class="yt-link" href="https://x.gd/5F2E7" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg>YouTube Music</a>
+        <button class="expand-btn" onclick="openModal(1)">歌詞を見る →</button>
+      </div></div><div class="song-card" data-id="10">
+      <div class="card-header">
+        <span class="card-num">TRACK 07</span>
+        <span class="card-title">rebuild　（ファースト）</span>
+        <span class="card-date">2026-03-12</span>
+      </div>
+      <div class="card-tags"><span class="tag">Rock</span></div>
+      <div class="card-preview">Rebuild ファースト
+
+燃やし尽くした　全部燃やした
+残ったのは　灰と息だけ
+
+それでいい　それでいい
+ここからまた　始めればいい
+
+
+奪われた夜も　裏切…</div>
+      <div class="card-footer">
+        <a class="yt-link" href="https://x.gd/5F2E7" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg>YouTube Music</a>
+        <button class="expand-btn" onclick="openModal(10)">歌詞を見る →</button>
+      </div></div></div>
+
+<!-- LYRICS MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">凪　～al_Ver.～</div>
+      <div class="modal-meta">
+        <span class="modal-date" id="modalDate">2026-03-15</span>
+        <div class="card-tags" id="modalTags" style="padding:0;margin:0;"><span class="tag">ロック</span></div>
+      </div>
+      <button class="close-btn" onclick="closeFull()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"><div class="lyrics-text">凪　～al_ver.~
+
+血と泥の道 削（ハツ）り来た
+誇りだけは捨てずに
+
+幾度も倒れた夜でも
+カタナはまだ折れてはいない
+
+
+折れた夢　散った日々
+すべて斬り捨て
+この魂を鍛え直す
+……さぁ、打ち上げろ！
+
+
+rebuild rebuild
+嵐の中でも
+壊れた日々さえハガネへ変えて
+
+rebuild rebuild 
+泥臭くてもいいじゃないか
+我が道を往け
+
+
+闇の中で知った痛み
+それがカテとなる
+
+燃え尽きた灰の中で
+新たな炎がうまれる
+
+
+折れたヤイバを炎へくべろ
+戦いは終わりじゃない
+魂がある限り
+キサマを超えて行く！
+
+
+rebuild rebuild
+立ち上がれ
+傷だらけでも
+
+
+rebuild rebuild rebuild
+すべて受け入れ
+何度も描け　魂の地図よ
+
+
+release release release
+新たなヤイバ　サヤにおさめ
+凪の中をゆこう
+
+
+release release release
+泥臭くてもいいじゃないか
+我が道を往く　己を誇れ
+誇れ　誇れ</div></div>
+    <div class="modal-footer">
+      <a class="yt-link-lg" id="modalYtLink" href="https://x.gd/5F2E7" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+          <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path>
+        </svg>
+        YouTube Music で聴く
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- HAMBURGER -->
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-artist">kenjin_alchemist</div>
+    <div class="sidebar-sub">Official Lyrics</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">検索</div>
+    <div class="sidebar-search-wrap">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" class="sidebar-search" id="sidebarSearch" placeholder="曲名・歌詞を検索…">
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">ジャンル</div>
+    <div class="sidebar-tags" id="sidebarTags"></div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">曲一覧</div>
+  </div>
+  <div class="sidebar-song-list" id="sidebarSongList"></div>
+
+  <div class="sidebar-footer">
+    <a class="sidebar-yt-link" href="https://music.youtube.com/" target="_blank">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg>
+      YouTube Music
+    </a>
+  </div>
+</div>
+
+<script>
+// =============================================
+// Supabase設定
+// =============================================
+const SUPABASE_URL = 'https://pxgzisfqcrcexzmyscgf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4Z3ppc2ZxY3JjZXh6bXlzY2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NTIzODEsImV4cCI6MjA4OTMyODM4MX0.zt-TU6QN9WNetbJSXlNvIEAmMggX0of9J27hfYFngN8';
+
+const api = {
+  headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+  async getAll() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/songs?select=*&order=sort_order.asc,id.asc`, { headers: this.headers });
+    return res.json();
+  },
+  async insert(song) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/songs`, {
+      method: 'POST', headers: { ...this.headers, 'Prefer': 'return=representation' },
+      body: JSON.stringify(song)
+    });
+    return res.json();
+  },
+  async update(id, song) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/songs?id=eq.${id}`, {
+      method: 'PATCH', headers: { ...this.headers, 'Prefer': 'return=representation' },
+      body: JSON.stringify(song)
+    });
+    return res.json();
+  },
+  async delete(id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/songs?id=eq.${id}`, { method: 'DELETE', headers: this.headers });
+  },
+  async updateOrder(id, sort_order) {
+    await fetch(`${SUPABASE_URL}/rest/v1/songs?id=eq.${id}`, {
+      method: 'PATCH', headers: this.headers,
+      body: JSON.stringify({ sort_order })
+    });
+  }
+};
+
+let songs = [];
+let activeTag = [];
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function allTags() {
+  const set = new Set();
+  songs.forEach(s => (s.tags||[]).forEach(t => set.add(t)));
+  return [...set];
+}
+
+// =============================================
+// 初期データ投入チェック（初回のみ）
+// =============================================
+const initialSongs = [{"title":"Rebuild","date":"2026-03-13","tags":["Rock"],"yt_url":"https://x.gd/5F2E7","sort_order":1,"lyrics":"Rebuild\n\n燃やし尽くした　全てを燃やした\n残ったのは　灰と息だけ\n\nそれでいい　それでいい\nここからまた　始めればいい\n\n\n奪われた夜も　裏切りの朝も\n全部くべてやれ　この炎に\n痛ければ痛いほど　翼になる\n灰の中でしか生まれないものがある\n\n\nRebuild Rebuild Rebuild\n何度でも錬成すればいい\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ 空が高くなる\nまた羽ばたく　夜明けへ\n\n\n折れた夢も 散った日々も\n全てが今の俺の糧\n無駄なものなんて 一つもなかった\n灰は新たな翼となって生まれ変わる\n\n\nRebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild \nここからまた始めればいい\n\n何度でも描きなおせ　心の地図よ\n灰を糧々に　生まれ変われ\n\n\nRebuild Rebuild Rebuild\nまだ終われない\n\nRebuild Rebuild Rebuild\nここからまたはじまる\n\n何度でもやり直せ　魂の錬成よ\n新たな翼で　羽ばたいてゆけ\n\n\nRebuild Rebuild Rebuild\n何度でも錬成すればいい\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n\nRebuild ....."},{"title":"伽藍の鳥（Garan-no-Tori）","date":"2026-03-15","tags":["Dark Rock"],"yt_url":"https://x.gd/5F2E7","sort_order":2,"lyrics":"伽藍の鳥 (Garan-no-Tori)\n\n拍手喝采、昨日の絶頂\n突き落とされて　泥を舐めた\n「君のため」なんて　反吐が出るような\n甘い毒薬　飲み干した午後\n\n期待という名の　重い枷\n外れた時には　骨もバラバラ\n真っ白な灰に　降り積もる\n誰かの笑い声　耳を塞いだ\n\n\n壊れたなら　壊れたままでいい\n歪なピースを　研ぎ澄ませ\n心臓の音だけが　唯一の正解\n……さあ、カウントを始めようか。\n\n\n咲け！　奈落の底で　黒く気高く\n奪われた声を　雷鳴に変えて\n正義も悪も　振り切った先の\n私だけの夜を　支配してやる\n予定調和の　天国なんていらない\nこの地獄こそが　私の玉座だ\n\n\nお利口さんの　フリはもう飽きた\n鏡に映る　虚像を叩き割れ\n「普通」という名の　集団リンチ\n不適合の烙印　勲章に変えて\n\nあーだこーだ　外野のノイズ\nBPMに乗せて　シュレッダーにポイッ\n一回死んだら　失うものはない\n無敵のロジック　ここに見参\n\n\n憎しみは　ガソリンになった\n悲しみは　翼になった\nだけど　それすらも　いつか燃え尽きて\n残ったのは　ただ広大な　空の青\n\n全部、置いていくんだ！\n\n\n舞え！　執着を捨てて　風の向こうへ\n許す必要もない　忘れてあげるわ\n怒りの果てに　辿り着いたのは\n凪いだ海の底　静かな覚醒\n\nもう　誰も私を　定義できない\n自由という名の　空っぽを抱いて\n\n\nさよなら　昨日までの私。\n伽藍の堂内で　鳥は笑う。\n風の音だけが　聴こえる。"},{"title":"凪　～kenjin_Ver.～","date":"2026-03-15","tags":["Rock"],"yt_url":"https://x.gd/5F2E7","sort_order":3,"lyrics":"凪　～kenjin_ver.～\n\n血泥の道を　歩いてきた\n誇りだけは捨てずに\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\nこの魂を鍛え直す\n\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild\n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n燃え尽きた灰の中で\n新たな炎が生まれる\n\n\n折れたヤイバを 炎へくべろ\n戦いは終わりじゃない\n魂がある限り\n\n\nrebuild rebuild\n立ち上がれ\n傷だらけでも\n\nrebuild rebuild rebuild\nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release\n新たな刃　鞘におさめ\n凪いだ　中をゆこう\n\nrelease release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ"},{"title":"涅槃のレプリカ","date":"2026-03-15","tags":["Dark Rock"],"yt_url":"https://x.gd/5F2E7","sort_order":4,"lyrics":"涅槃のレプリカ\n\nガラクタの山に　突っ伏して見た空は\n不気味なほど　青くて吐き気がした\n期待　純粋　将来　そんなキラキラしたゴミに\n足を取られて　転んで　泥を啜った\n\n\nモウ終わったって　誰かの囁き\n鏡の中　ヒビ割れた僕が笑う\n完璧だったはずの　パズルのピースは\n今やただの　尖った凶器だ\n\n\nアア　どうせなら　跡形もなく\n粉々に　なっちゃえば良かったのに\n中途半端に　脈打つ鼓動が\n(マダ死んでねぇッテ)　煩く吼えるんだ\n\n\n踊れ！　絶望の淵で\n壊れた人生の　破片を握り締め\n血を流して　愛を叫べ\n綺麗事なんて　灰にして飛ばせ\n\n再起の火を灯せ　地獄の底から\n世界を塗り替える　黒い光を放て\nまだ　僕の物語は　終わらせない\n\n\n一回死んだら　無敵になった\nモラルもルールも　全部脱ぎ捨てた\n成功の果実　そんなの興味ない\n僕が欲しいのは　僕だけの正解\n(ビルドアップ！)\n\n積み上げた城が　また崩れたって\n構わないさ　何度でもビルドアップ\n可哀想なんて　同情は　いらない\nその哀れみの目を　引っくり返してやる\n\n\n嵐が過ぎたあとの　砂漠に立って\n何もかも失って　やっと気づいたんだ\n守るべきものは　外側にはなかった\n(空っぽになった器に)\n\n満ちていくのは　怒りでも　悲しみでもない\nただ　透明な自分という静寂\n\n\n放て！　覚醒の咆哮\n再構築された　魂の姿を\n\n誰に媚びることもなく　今\n一輪の毒花のように　凛と咲き誇れ\n\n成功も失敗も　すべては凪の中\n僕は僕として　この場所で生きていく\n\n\n壊れて　治して　また壊して\nそうして辿り着いた　この無彩色の境地\n悪くないさ\n\n新しい朝を　僕から始めよう"},{"title":"凪　～al_Ver.～","date":"2026-03-15","tags":["Rock"],"yt_url":"https://x.gd/5F2E7","sort_order":5,"lyrics":"凪　～al_ver.~\n\n血と泥の道 削（ハツ）り来た\n誇りだけは捨てずに\n\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\nこの魂を鍛え直す\n……さぁ、打ち上げろ！\n\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild \n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n\n燃え尽きた灰の中で\n新たな炎がうまれる\n\n\n折れたヤイバを炎へくべろ\n戦いは終わりじゃない\n魂がある限り\nキサマを超えて行く！\n\n\nrebuild rebuild\n立ち上がれ\n傷だらけでも\n\n\nrebuild rebuild rebuild\nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release release\n新たなヤイバ　サヤにおさめ\n凪の中をゆこう\n\n\nrelease release release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ\n誇れ　誇れ"},{"title":"バグ・パレード","date":"2026-03-15","tags":["J-POP"],"yt_url":"https://x.gd/5F2E7","sort_order":6,"lyrics":"バグ・パレード\n\n鏡の中の私\n今日も最高　無敵\n欠けてるパーツなんて一つもない\n恋愛？ 娯楽？必要ない\n\n完成された箱庭で\n私は私を愛してきた\n\n職場のデスク　隣のあなた\nただの風景だったはずなのに\n\nティータイム二度　三度\n視線がまた重なる\n\n\n「そのままでいい」\n聞き飽きたはずなのに\nあなたの声だと胸に刺さる\n\nねえ　どうして？\n完璧なはずの私が\n少しだけ揺れる\n\n\n巡り合うのは\n全知全能のサダメ\n\n恋愛下手な私が\n初めて心を預けた\n\n特別なんて\n認めないはずだった\n適度な距離が一番心地いい\n\nキミとイキヲシヨー\n\nそんな優しい世界で\n呼吸をしよう\n\n一人の空白は私の誇り\n無理に埋めない\nそれが正解\n\nあなたは私を縛らない\n私もあなたを壊さない\n\nこの絶妙な温度が今の私たち\n「愛される」より\n先に「愛し抜く」自信はあるの\n\nだけど　あなたに愛される\n時間はもっと　悪くない\n\n\n不器用な二人の\n誇り高い歩幅で\n新しい私の歴史を\n刻んでいこう\n\n\n巡り合うのは\n決まっていたんだね\n銀河みたいな時間を\n一瞬で越えて\n\nおはようも\nおやすみも\n全部　魂を震わせる\n\n適度な距離が\n一番愛おしい\n\nあなたを想うたび\n私は私を好きになる\n\n\nこの奇跡を抱きしめて\n\n出会えてよかった\n最高な私と\nあなたでいこう"},{"title":"MY WILL, MY WORLD","date":"2025-03-15","tags":["Rock"],"yt_url":"https://x.gd/5F2E7","sort_order":7,"lyrics":"MY WILL, MY WORLD！\n\nイツマデ　イツマデ\nイツマデ ドレイ ヤッテンノ？\n\n\nおりこうってなんだっけ？\n誰かの期待　背中に積んで\n息の仕方　忘れてたんだ\n\nもういいよ　その重さ全部\n今夜ここに　置いてけよ\n\n全部わたしが決める\nそれが最高でしょ\n\n\n限界なんて　誰が決めた？\nわたしのテンジョウ　わたしでコワス\nねえ行こうよ　震えてても\n全部ウワガキしてやるから\n\n\nOver ride　Over rise\n限界破裂で　塗り替えろ\n\nOver ride　Over rise\n怖い？　いいじゃん\n笑って飛び込め　シンセカイ\n\n\n正しさって何だっけ？\nてめぇのモノサシで　測んなよ\n全部わたしが　決めるんだ\n\nだから何？　いいじゃん\n元からレールなんてないからさ\n\n自分が主人公\nそれって最高でしょ\n\n\n限界なんて　関係ねぇ！\nわたしのセカイは　わたしでエガク\nねえ叫べよ　声が枯れるまで\n全部ウワガキしてやれ\n\n\nOver ride　Over rise\n限界破裂で　塗り替えろ\n\nOver ride　Over rise\n転んだ？　死ぬ以外かすり傷\n笑って飛び込め　New World\n\n\n静かに　目閉じて　Little Me\n\n……そこにいるの？\n\nチャントイルヨ\nドン　ドン　ドン！\n\nさぁ…イクよ　Open World！！\n\n\nOver ride　Over rise\nわたしの世界で　塗り替えろ！\n\nOver ride　Over rise\n限界？　ハナからなかった\n笑って行けよ　MY WORLD!!\n\nMY WILL, MY WORLD！！！"},{"title":"こういうのでいい","date":"2026-03-15","tags":["J-POP"],"yt_url":"https://x.gd/5F2E7","sort_order":8,"lyrics":"こういうのでいい\n\n急がなくても　いい夜だ\nコンビニ帰りの　ぬるい風\n遠回りでも　まあいいさ\n景色も少し　変わるしね\n\nあのアスファルトの　照り返しも\n今は静かに　眠ってる\n予定通りの　明日なんて\n今は考えず　歩こうか\n\n勝った負けたは　置いといて\n正解（こたえ）合わせも　後回し\n今夜はただ　飲もうか\n\nこのくらいで　このくらいで\nちょうどいいじゃないか\n笑って飲めれば\nそれでいい\n\nこのくらいで　このくらいで\n悪くないじゃないか\n肩の力を　抜いていこう\n\n\n「ぼちぼち」なんて　言い合って\nレモンサワー　開けている\n完璧じゃない　この日々が\n愛おしく思える　こんな夜もいい\n\n手に入れたもの　こぼしたもの\n数えるのを　やめてみれば\n「それもいい」と　笑えるような\n風が通り抜けていく\n\n背伸びをしても　疲れるだけさ\nハイボール　揺らすだけで\n等身大の　今の僕で\nそれだけで　十分さ\n\nこのくらいで　このくらいで\nちょうどいいじゃないか\n笑って飲めれば\nそれがいい\n\nこのくらいで　このくらいで\n悪くないじゃないか\n明日も「ぼちぼち」\nそれがいい"},{"title":"rebuild　（ファースト）","date":"2026-03-12","tags":["Rock"],"yt_url":"https://x.gd/5F2E7","sort_order":9,"lyrics":"Rebuild ファースト\n\n燃やし尽くした　全部燃やした\n残ったのは　灰と息だけ\n\nそれでいい　それでいい\nここからまた　始めればいい\n\n\n奪われた夜も　裏切りの朝も\n全部くべてやれ　この炎に\n痛ければ痛いほど　翼になる\n灰の中でしか生まれないものがある\n\n\nRebuild Rebuild Rebuild\n何度でも　作り直す\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ　空が高くなる\nまた羽ばたく　夜明けへ\nreviver\n\n折れた夢も 散った日々も\n全部が今の俺を作ってる\n無駄なものなんて 一つもなかった\nこれが俺の魂の地図\n\nRebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild Rebuild \nここからが本番だ\n\n灰になるたびに　翼が生える\nまた空へ　夜明けへ\n\n\nRebuild Rebuild Rebuild\n何度でも作り直す\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ　空が高くなる\nまた羽ばたく　夜明けへ\nreviver\n\nRebuild ....."},{"title":"凪　（ファースト）","date":"2026-03-12","tags":["Japan Rock"],"yt_url":"https://x.gd/5F2E7","sort_order":10,"lyrics":"凪　ファースト\n\n血と泥の道を　歩いてきた\n誇りだけは捨てずに\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\n\nこの魂を鍛え直す\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild rebuild\n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n燃え尽きた灰の中で\n新たな炎が生まれる\n\n\n折れたヤイバを 炎へくべろ\n戦いは終わりじゃない\n魂がある限り\n\n\nrebuild rebuild\n立ち上がれ　傷だらけでも\n\nrebuild rebuild \nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release release\n新たな刃　鞘におさめ\n凪の中をゆく\n\nrelease release release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ"}];
+
+async function seedIfEmpty() {
+  const existing = await api.getAll();
+  if (!existing || existing.length === 0) {
+    for (const s of initialSongs) {
+      await api.insert(s);
+    }
+  }
+}
+
+// =============================================
+// データ変換（DB形式 → 画面形式）
+// =============================================
+function dbToSong(row) {
+  let tags = [];
+  try {
+    if (Array.isArray(row.tags)) tags = row.tags;
+    else if (typeof row.tags === 'string') tags = JSON.parse(row.tags);
+  } catch(e) { tags = []; }
+  return {
+    id: row.id,
+    title: row.title,
+    date: row.date,
+    tags,
+    ytUrl: row.yt_url || '#',
+    lyrics: row.lyrics || '',
+    sort_order: row.sort_order
+  };
+}
+
+function songToDb(s) {
+  return {
+    title: s.title,
+    date: s.date,
+    tags: JSON.stringify(s.tags),
+    yt_url: s.ytUrl || '#',
+    lyrics: s.lyrics,
+    sort_order: s.sort_order || 0
+  };
+}
+
+// =============================================
+// 表示ロジック
+// =============================================
+function renderFilterTags() {
+  const c = document.getElementById('filterTags');
+  c.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'filter-tag' + (activeTag.length === 0 ? ' active' : '');
+  all.textContent = 'ALL';
+  all.onclick = () => { activeTag = []; renderAll(); };
+  c.appendChild(all);
+  allTags().forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-tag' + (activeTag.includes(tag) ? ' active' : '');
+    btn.textContent = tag;
+    btn.onclick = () => {
+      if (activeTag.includes(tag)) activeTag = activeTag.filter(t => t !== tag);
+      else activeTag = [...activeTag, tag];
+      renderAll();
+    };
+    c.appendChild(btn);
+  });
+}
+
+function renderGrid(list) {
+  const grid = document.getElementById('songGrid');
+  grid.innerHTML = '';
+  if (!list.length) { grid.innerHTML = '<div class="empty">NO SONGS FOUND</div>'; return; }
+  list.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'song-card';
+    card.dataset.id = s.id;
+    const preview = (s.lyrics?.slice(0,80) + '…') || '';
+    const hasUrl = s.ytUrl && s.ytUrl !== '#';
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-num">TRACK ${String(i+1).padStart(2,'0')}</span>
+        <span class="card-title">${esc(s.title)}</span>
+        <span class="card-date">${s.date}</span>
+      </div>
+      <div class="card-tags">${(s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+      <div class="card-preview">${esc(preview)}</div>
+      <div class="card-footer">
+        ${hasUrl
+          ? `<a class="yt-link" href="${esc(s.ytUrl)}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>YouTube Music</a>`
+          : `<span style="font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--text-dim);">URL未設定</span>`
+        }
+        <button class="expand-btn" onclick="openModal(${s.id})">歌詞を見る →</button>
+      </div>`;
+    card.onclick = () => openModal(s.id);
+    grid.appendChild(card);
+  });
+  const isFiltered = activeTag.length > 0 || document.getElementById('searchInput').value.trim();
+  if (!isFiltered) {
+    if (gridSortable) gridSortable.destroy();
+    gridSortable = Sortable.create(grid, {
+      animation: 150, ghostClass:'sortable-ghost', dragClass:'sortable-drag',
+      delay:100, delayOnTouchOnly:true,
+      async onEnd() {
+        const newOrder = [...grid.querySelectorAll('.song-card')].map(el => parseInt(el.dataset.id));
+        songs = newOrder.map(id => songs.find(s => s.id === id));
+        for (let i = 0; i < songs.length; i++) {
+          await api.updateOrder(songs[i].id, i + 1);
+        }
+        renderAll();
+        if (document.getElementById('adminPanel').classList.contains('open')) renderAdminList();
+      }
+    });
+  } else {
+    if (gridSortable) { gridSortable.destroy(); gridSortable = null; }
+  }
+}
+
+function renderAll() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let list = [...songs];
+  if (activeTag.length > 0) list = list.filter(s => (s.tags||[]).some(t => activeTag.includes(t)));
+  if (q) list = list.filter(s => s.title.toLowerCase().includes(q) || (s.lyrics||'').toLowerCase().includes(q));
+  renderGrid(list);
+  renderFilterTags();
+  document.getElementById('totalCount').textContent = songs.length;
+}
+
+// =============================================
+// モーダル
+// =============================================
+function openModal(id) {
+  const s = songs.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modalTitle').textContent = s.title;
+  document.getElementById('modalDate').textContent = s.date;
+  document.getElementById('modalTags').innerHTML = (s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  const lnk = document.getElementById('modalYtLink');
+  const hasUrl = s.ytUrl && s.ytUrl !== '#';
+  lnk.href = hasUrl ? s.ytUrl : '#';
+  lnk.className = 'yt-link-lg' + (hasUrl ? '' : ' disabled');
+  document.getElementById('modalBody').innerHTML = `<div class="lyrics-text">${esc(s.lyrics)}</div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeFull() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeFull();
+}
+
+// =============================================
+// 管理画面
+// =============================================
+let editingId = null;
+let adminSortable = null;
+let gridSortable = null;
+
+function toggleAdmin() {
+  const p = document.getElementById('adminPanel');
+  const b = document.getElementById('adminToggleBtn');
+  const isOpen = p.classList.contains('open');
+  if (isOpen) {
+    p.classList.remove('open');
+    b.textContent = '管理画面を開く';
+    b.classList.remove('active');
+    b.style.display = 'none';
+    return;
+  }
+  const pw = prompt('パスワードを入力してね');
+  if (pw === null) return;
+  if (pw !== 'take1410') { alert('パスワードが違うよ！'); return; }
+  p.classList.add('open');
+  b.textContent = '管理画面を閉じる';
+  b.classList.add('active');
+  renderAdminList();
+}
+
+function renderAdminList() {
+  const c = document.getElementById('adminSongList');
+  if (!songs.length) { c.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">まだ曲がありません</div>'; return; }
+  c.innerHTML = songs.map((s,i) => `
+    <div class="admin-song-row" data-id="${s.id}">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="admin-song-name">${esc(s.title)}</span>
+      <span class="admin-song-date">${s.date}</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(${s.id})">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(${s.id})">削除</button>
+    </div>`).join('');
+  if (adminSortable) adminSortable.destroy();
+  adminSortable = Sortable.create(c, {
+    handle:'.drag-handle', animation:150, ghostClass:'sortable-ghost', dragClass:'sortable-drag',
+    async onEnd() {
+      const newOrder = [...c.querySelectorAll('.admin-song-row')].map(el => parseInt(el.dataset.id));
+      songs = newOrder.map(id => songs.find(s => s.id === id));
+      for (let i = 0; i < songs.length; i++) {
+        await api.updateOrder(songs[i].id, i + 1);
+      }
+      renderAdminList();
+      renderAll();
+    }
+  });
+}
+
+function openAddForm() {
+  editingId = null;
+  document.getElementById('formTitle').textContent = '新しい曲を追加';
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('fTags').value = '';
+  document.getElementById('fUrl').value = '';
+  document.getElementById('fLyrics').value = '';
+  document.getElementById('songForm').style.display = 'block';
+  document.getElementById('addNewWrap').style.display = 'none';
+  document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
+}
+
+function openEditForm(id) {
+  const s = songs.find(x => x.id === id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById('formTitle').textContent = '編集：' + s.title;
+  document.getElementById('fTitle').value = s.title;
+  document.getElementById('fDate').value = s.date;
+  document.getElementById('fTags').value = (s.tags||[]).join(', ');
+  document.getElementById('fUrl').value = (s.ytUrl === '#') ? '' : s.ytUrl;
+  document.getElementById('fLyrics').value = s.lyrics;
+  document.getElementById('songForm').style.display = 'block';
+  document.getElementById('addNewWrap').style.display = 'none';
+  document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelForm() {
+  document.getElementById('songForm').style.display = 'none';
+  document.getElementById('addNewWrap').style.display = 'block';
+  editingId = null;
+}
+
+async function saveSong() {
+  const title  = document.getElementById('fTitle').value.trim();
+  const date   = document.getElementById('fDate').value;
+  const tags   = document.getElementById('fTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const url    = document.getElementById('fUrl').value.trim();
+  const lyrics = document.getElementById('fLyrics').value.trim();
+  if (!title) { showToast('タイトルを入力してね！'); return; }
+  showToast('保存中…');
+  const dbData = { title, date, tags: JSON.stringify(tags), yt_url: url || '#', lyrics };
+  if (editingId !== null) {
+    await api.update(editingId, dbData);
+  } else {
+    const maxOrder = songs.length ? Math.max(...songs.map(s => s.sort_order||0)) : 0;
+    await api.insert({ ...dbData, sort_order: maxOrder + 1 });
+  }
+  songs = (await api.getAll()).map(dbToSong);
+  cancelForm();
+  renderAdminList();
+  renderAll();
+  renderSidebar();
+  showToast(editingId !== null ? '更新したよ！' : '追加したよ！');
+  editingId = null;
+}
+
+async function deleteSong(id) {
+  const s = songs.find(x => x.id === id);
+  if (!s || !confirm(`「${s.title}」を削除していい？`)) return;
+  await api.delete(id);
+  songs = songs.filter(x => x.id !== id);
+  renderAdminList();
+  renderAll();
+  renderSidebar();
+  showToast('削除したよ！');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// =============================================
+// サイドバー
+// =============================================
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('sidebarOverlay');
+  const b = document.getElementById('hamburgerBtn');
+  if (s.classList.contains('open')) { closeSidebar(); return; }
+  s.classList.add('open'); o.classList.add('open'); b.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderSidebar();
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.getElementById('hamburgerBtn').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderSidebar() {
+  const tagsEl = document.getElementById('sidebarTags');
+  const tags = [...new Set(songs.flatMap(s => s.tags||[]))];
+  tagsEl.innerHTML = `<button class="sidebar-tag${activeTag.length === 0 ? ' active' : ''}" data-tag="">ALL</button>` +
+    tags.map(t => `<button class="sidebar-tag${activeTag.includes(t) ? ' active' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
+  tagsEl.querySelectorAll('.sidebar-tag').forEach(btn => {
+    btn.addEventListener('click', () => setSidebarTag(btn.dataset.tag === '' ? null : btn.dataset.tag));
+  });
+  const filtered = activeTag.length > 0 ? songs.filter(s => (s.tags||[]).some(t => activeTag.includes(t))) : songs;
+  const listEl = document.getElementById('sidebarSongList');
+  listEl.innerHTML = filtered.map((s, i) => `
+    <div class="sidebar-song-item" onclick="sidebarOpenSong(${s.id})">
+      <span class="sidebar-song-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="sidebar-song-name">${esc(s.title)}</span>
+      <span class="sidebar-song-tag">${esc((s.tags||[])[0] || '')}</span>
+    </div>`).join('');
+}
+
+function setSidebarTag(tag) {
+  if (tag === null) activeTag = [];
+  else if (activeTag.includes(tag)) activeTag = activeTag.filter(t => t !== tag);
+  else activeTag = [...activeTag, tag];
+  renderAll();
+  renderSidebar();
+}
+
+function sidebarOpenSong(id) {
+  closeSidebar();
+  setTimeout(() => openModal(id), 300);
+}
+
+document.getElementById('sidebarSearch').addEventListener('input', function() {
+  document.getElementById('searchInput').value = this.value;
+  renderAll();
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFull(); closeSidebar(); } });
+document.getElementById('searchInput').addEventListener('input', renderAll);
+
+// 隠し管理画面ショートカット（6969）
+let keyBuffer = '';
+document.addEventListener('keydown', e => {
+  keyBuffer += e.key;
+  if (keyBuffer.length > 4) keyBuffer = keyBuffer.slice(-4);
+  if (keyBuffer === '6969') {
+    keyBuffer = '';
+    const btn = document.getElementById('adminToggleBtn');
+    btn.style.display = 'block';
+    toggleAdmin();
+  }
+});
+
+// =============================================
+// 起動
+// =============================================
+(async () => {
+  document.getElementById('songGrid').innerHTML = '<div class="empty" style="opacity:0.5;">読み込み中…</div>';
+  await seedIfEmpty();
+  songs = (await api.getAll()).map(dbToSong);
+  renderAll();
+})();
+</script>
+
+</body></html>,"date":"2026-03-13","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"Rebuild\n\n燃やし尽くした　全てを燃やした\n残ったのは　灰と息だけ\n\nそれでいい　それでいい\nここからまた　始めればいい\n\n\n奪われた夜も　裏切りの朝も\n全部くべてやれ　この炎に\n痛ければ痛いほど　翼になる\n灰の中でしか生まれないものがある\n\n\nRebuild Rebuild Rebuild\n何度でも錬成すればいい\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ 空が高くなる\nまた羽ばたく　夜明けへ\n\n\n折れた夢も 散った日々も\n全てが今の俺の糧\n無駄なものなんて 一つもなかった\n灰は新たな翼となって生まれ変わる\n\n\nRebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild \nここからまた始めればいい\n\n何度でも描きなおせ　心の地図よ\n灰を糧々に　生まれ変われ\n\n\nRebuild Rebuild Rebuild\nまだ終われない\n\nRebuild Rebuild Rebuild\nここからまたはじまる\n\n何度でもやり直せ　魂の錬成よ\n新たな翼で　羽ばたいてゆけ\n\n\nRebuild Rebuild Rebuild\n何度でも錬成すればいい\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n\nRebuild ....."},{"id":4,"title":"伽藍の鳥（Garan-no-Tori）","date":"2026-03-15","tags":["Dark Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"伽藍の鳥 (Garan-no-Tori)\n\n拍手喝采、昨日の絶頂\n突き落とされて　泥を舐めた\n「君のため」なんて　反吐が出るような\n甘い毒薬　飲み干した午後\n\n期待という名の　重い枷\n外れた時には　骨もバラバラ\n真っ白な灰に　降り積もる\n誰かの笑い声　耳を塞いだ\n\n\n壊れたなら　壊れたままでいい\n歪なピースを　研ぎ澄ませ\n心臓の音だけが　唯一の正解\n……さあ、カウントを始めようか。\n\n\n咲け！　奈落の底で　黒く気高く\n奪われた声を　雷鳴に変えて\n正義も悪も　振り切った先の\n私だけの夜を　支配してやる\n予定調和の　天国なんていらない\nこの地獄こそが　私の玉座だ\n\n\nお利口さんの　フリはもう飽きた\n鏡に映る　虚像を叩き割れ\n「普通」という名の　集団リンチ\n不適合の烙印　勲章に変えて\n\nあーだこーだ　外野のノイズ\nBPMに乗せて　シュレッダーにポイッ\n一回死んだら　失うものはない\n無敵のロジック　ここに見参\n\n\n憎しみは　ガソリンになった\n悲しみは　翼になった\nだけど　それすらも　いつか燃え尽きて\n残ったのは　ただ広大な　空の青\n\n全部、置いていくんだ！\n\n\n舞え！　執着を捨てて　風の向こうへ\n許す必要もない　忘れてあげるわ\n怒りの果てに　辿り着いたのは\n凪いだ海の底　静かな覚醒\n\nもう　誰も私を　定義できない\n自由という名の　空っぽを抱いて\n\n\nさよなら　昨日までの私。\n伽藍の堂内で　鳥は笑う。\n風の音だけが　聴こえる。"},{"id":5,"title":"凪　～kenjin_Ver.～","date":"2026-03-15","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"凪　～kenjin_ver.～\n\n血泥の道を　歩いてきた\n誇りだけは捨てずに\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\nこの魂を鍛え直す\n\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild\n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n燃え尽きた灰の中で\n新たな炎が生まれる\n\n\n折れたヤイバを 炎へくべろ\n戦いは終わりじゃない\n魂がある限り\n\n\nrebuild rebuild\n立ち上がれ\n傷だらけでも\n\nrebuild rebuild rebuild\nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release\n新たな刃　鞘におさめ\n凪いだ　中をゆこう\n\nrelease release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ"},{"id":6,"title":"涅槃のレプリカ","date":"2026-03-15","tags":["Dark Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"涅槃のレプリカ\n\nガラクタの山に　突っ伏して見た空は\n不気味なほど　青くて吐き気がした\n期待　純粋　将来　そんなキラキラしたゴミに\n足を取られて　転んで　泥を啜った\n\n\nモウ終わったって　誰かの囁き\n鏡の中　ヒビ割れた僕が笑う\n完璧だったはずの　パズルのピースは\n今やただの　尖った凶器だ\n\n\nアア　どうせなら　跡形もなく\n粉々に　なっちゃえば良かったのに\n中途半端に　脈打つ鼓動が\n(マダ死んでねぇッテ)　煩く吼えるんだ\n\n\n踊れ！　絶望の淵で\n壊れた人生の　破片を握り締め\n血を流して　愛を叫べ\n綺麗事なんて　灰にして飛ばせ\n\n再起の火を灯せ　地獄の底から\n世界を塗り替える　黒い光を放て\nまだ　僕の物語は　終わらせない\n\n\n一回死んだら　無敵になった\nモラルもルールも　全部脱ぎ捨てた\n成功の果実　そんなの興味ない\n僕が欲しいのは　僕だけの正解\n(ビルドアップ！)\n\n積み上げた城が　また崩れたって\n構わないさ　何度でもビルドアップ\n可哀想なんて　同情は　いらない\nその哀れみの目を　引っくり返してやる\n\n\n嵐が過ぎたあとの　砂漠に立って\n何もかも失って　やっと気づいたんだ\n守るべきものは　外側にはなかった\n(空っぽになった器に)\n\n満ちていくのは　怒りでも　悲しみでもない\nただ　透明な自分という静寂\n\n\n放て！　覚醒の咆哮\n再構築された　魂の姿を\n\n誰に媚びることもなく　今\n一輪の毒花のように　凛と咲き誇れ\n\n成功も失敗も　すべては凪の中\n僕は僕として　この場所で生きていく\n\n\n壊れて　治して　また壊して\nそうして辿り着いた　この無彩色の境地\n悪くないさ\n\n新しい朝を　僕から始めよう"},{"id":7,"title":"凪　～al_Ver.～","date":"2026-03-15","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"凪　～al_ver.~\n\n血と泥の道 削（ハツ）り来た\n誇りだけは捨てずに\n\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\nこの魂を鍛え直す\n……さぁ、打ち上げろ！\n\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild \n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n\n燃え尽きた灰の中で\n新たな炎がうまれる\n\n\n折れたヤイバを炎へくべろ\n戦いは終わりじゃない\n魂がある限り\nキサマを超えて行く！\n\n\nrebuild rebuild\n立ち上がれ\n傷だらけでも\n\n\nrebuild rebuild rebuild\nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release release\n新たなヤイバ　サヤにおさめ\n凪の中をゆこう\n\n\nrelease release release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ\n誇れ　誇れ"},{"id":8,"title":"バグ・パレード","date":"2026-03-15","tags":["J-POP"],"ytUrl":"https://x.gd/5F2E7","lyrics":"バグ・パレード\n\n鏡の中の私\n今日も最高　無敵\n欠けてるパーツなんて一つもない\n恋愛？ 娯楽？必要ない\n\n完成された箱庭で\n私は私を愛してきた\n\n職場のデスク　隣のあなた\nただの風景だったはずなのに\n\nティータイム二度　三度\n視線がまた重なる\n\n\n「そのままでいい」\n聞き飽きたはずなのに\nあなたの声だと胸に刺さる\n\nねえ　どうして？\n完璧なはずの私が\n少しだけ揺れる\n\n\n巡り合うのは\n全知全能のサダメ\n\n恋愛下手な私が\n初めて心を預けた\n\n特別なんて\n認めないはずだった\n適度な距離が一番心地いい\n\nキミとイキヲシヨー\n\nそんな優しい世界で\n呼吸をしよう\n\n一人の空白は私の誇り\n無理に埋めない\nそれが正解\n\nあなたは私を縛らない\n私もあなたを壊さない\n\nこの絶妙な温度が今の私たち\n「愛される」より\n先に「愛し抜く」自信はあるの\n\nだけど　あなたに愛される\n時間はもっと　悪くない\n\n\n不器用な二人の\n誇り高い歩幅で\n新しい私の歴史を\n刻んでいこう\n\n\n巡り合うのは\n決まっていたんだね\n銀河みたいな時間を\n一瞬で越えて\n\nおはようも\nおやすみも\n全部　魂を震わせる\n\n適度な距離が\n一番愛おしい\n\nあなたを想うたび\n私は私を好きになる\n\n\nこの奇跡を抱きしめて\n\n出会えてよかった\n最高な私と\nあなたでいこう"},{"id":1,"title":"MY WILL, MY WORLD","date":"2025-03-15","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"MY WILL, MY WORLD！\n\nイツマデ　イツマデ\nイツマデ ドレイ ヤッテンノ？\n\n\nおりこうってなんだっけ？\n誰かの期待　背中に積んで\n息の仕方　忘れてたんだ\n\nもういいよ　その重さ全部\n今夜ここに　置いてけよ\n\n全部わたしが決める\nそれが最高でしょ\n\n\n限界なんて　誰が決めた？\nわたしのテンジョウ　わたしでコワス\nねえ行こうよ　震えてても\n全部ウワガキしてやるから\n\n\nOver ride　Over rise\n限界破裂で　塗り替えろ\n\nOver ride　Over rise\n怖い？　いいじゃん\n笑って飛び込め　シンセカイ\n\n\n正しさって何だっけ？\nてめぇのモノサシで　測んなよ\n全部わたしが　決めるんだ\n\nだから何？　いいじゃん\n元からレールなんてないからさ\n\n自分が主人公\nそれって最高でしょ\n\n\n限界なんて　関係ねぇ！\nわたしのセカイは　わたしでエガク\nねえ叫べよ　声が枯れるまで\n全部ウワガキしてやれ\n\n\nOver ride　Over rise\n限界破裂で　塗り替えろ\n\nOver ride　Over rise\n転んだ？　死ぬ以外かすり傷\n笑って飛び込め　New World\n\n\n静かに　目閉じて　Little Me\n\n……そこにいるの？\n\nチャントイルヨ\nドン　ドン　ドン！\n\nさぁ…イクよ　Open World！！\n\n\nOver ride　Over rise\nわたしの世界で　塗り替えろ！\n\nOver ride　Over rise\n限界？　ハナからなかった\n笑って行けよ　MY WORLD!!\n\nMY WILL, MY WORLD！！！"},{"id":9,"title":"こういうのでいい","date":"2026-03-15","tags":["J-POP"],"ytUrl":"https://x.gd/5F2E7","lyrics":"こういうのでいい\n\n急がなくても　いい夜だ\nコンビニ帰りの　ぬるい風\n遠回りでも　まあいいさ\n景色も少し　変わるしね\n\nあのアスファルトの　照り返しも\n今は静かに　眠ってる\n予定通りの　明日なんて\n今は考えず　歩こうか\n\n勝った負けたは　置いといて\n正解（こたえ）合わせも　後回し\n今夜はただ　飲もうか\n\nこのくらいで　このくらいで\nちょうどいいじゃないか\n笑って飲めれば\nそれでいい\n\nこのくらいで　このくらいで\n悪くないじゃないか\n肩の力を　抜いていこう\n\n\n「ぼちぼち」なんて　言い合って\nレモンサワー　開けている\n完璧じゃない　この日々が\n愛おしく思える　こんな夜もいい\n\n手に入れたもの　こぼしたもの\n数えるのを　やめてみれば\n「それもいい」と　笑えるような\n風が通り抜けていく\n\n背伸びをしても　疲れるだけさ\nハイボール　揺らすだけで\n等身大の　今の僕で\nそれだけで　十分さ\n\nこのくらいで　このくらいで\nちょうどいいじゃないか\n笑って飲めれば\nそれがいい\n\nこのくらいで　このくらいで\n悪くないじゃないか\n明日も「ぼちぼち」\nそれがいい"},{"id":10,"title":"rebuild　（ファースト）","date":"2026-03-12","tags":["Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"Rebuild ファースト\n\n燃やし尽くした　全部燃やした\n残ったのは　灰と息だけ\n\nそれでいい　それでいい\nここからまた　始めればいい\n\n\n奪われた夜も　裏切りの朝も\n全部くべてやれ　この炎に\n痛ければ痛いほど　翼になる\n灰の中でしか生まれないものがある\n\n\nRebuild Rebuild Rebuild\n何度でも　作り直す\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ　空が高くなる\nまた羽ばたく　夜明けへ\nreviver\n\n折れた夢も 散った日々も\n全部が今の俺を作ってる\n無駄なものなんて 一つもなかった\nこれが俺の魂の地図\n\nRebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild Rebuild \nまだ終わらない\n\nRebuild Rebuild Rebuild \nここからが本番だ\n\n灰になるたびに　翼が生える\nまた空へ　夜明けへ\n\n\nRebuild Rebuild Rebuild\n何度でも作り直す\n\nRebuild Rebuild Rebuild\nこれが俺の生き方だ\n\n傷の数だけ　空が高くなる\nまた羽ばたく　夜明けへ\nreviver\n\nRebuild ....."},{"id":11,"title":"凪　（ファースト）","date":"2026-03-12","tags":["Japan Rock"],"ytUrl":"https://x.gd/5F2E7","lyrics":"凪　ファースト\n\n血と泥の道を　歩いてきた\n誇りだけは捨てずに\n幾度も倒れた夜でも\nカタナはまだ折れてはいない\n\n\n折れた夢　散った日々\nすべて斬り捨て\n\nこの魂を鍛え直す\n\nrebuild rebuild\n嵐の中でも\n壊れた日々さえハガネへ変えて\n\nrebuild rebuild rebuild\n泥臭くてもいいじゃないか\n我が道を往け\n\n\n闇の中で知った痛み\nそれがカテとなる\n燃え尽きた灰の中で\n新たな炎が生まれる\n\n\n折れたヤイバを 炎へくべろ\n戦いは終わりじゃない\n魂がある限り\n\n\nrebuild rebuild\n立ち上がれ　傷だらけでも\n\nrebuild rebuild \nすべて受け入れ\n何度も描け　魂の地図よ\n\n\nrelease release release\n新たな刃　鞘におさめ\n凪の中をゆく\n\nrelease release release\n泥臭くてもいいじゃないか\n我が道を往く　己を誇れ"}];
+
+const STORAGE_KEY = 'lyrics_archive_songs';
+function loadSongs() {
+  // defaultSongsを常にlocalStorageに書き込んで使用する
+  saveSongsToStorage(defaultSongs);
+  return JSON.parse(JSON.stringify(defaultSongs));
+}
+function saveSongsToStorage(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+let songs = loadSongs();
+let activeTag = [];
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function allTags() {
+  const set = new Set();
+  songs.forEach(s => s.tags.forEach(t => set.add(t)));
+  return [...set];
+}
+
+function renderFilterTags() {
+  const c = document.getElementById('filterTags');
+  c.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'filter-tag' + (activeTag.length === 0 ? ' active' : '');
+  all.textContent = 'ALL';
+  all.onclick = () => { activeTag = []; renderAll(); };
+  c.appendChild(all);
+  allTags().forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-tag' + (activeTag.includes(tag) ? ' active' : '');
+    btn.textContent = tag;
+    btn.onclick = () => {
+      if (activeTag.includes(tag)) {
+        activeTag = activeTag.filter(t => t !== tag);
+      } else {
+        activeTag = [...activeTag, tag];
+      }
+      renderAll();
+    };
+    c.appendChild(btn);
+  });
+}
+
+function renderGrid(list) {
+  const grid = document.getElementById('songGrid');
+  grid.innerHTML = '';
+  if (!list.length) { grid.innerHTML = '<div class="empty">NO SONGS FOUND</div>'; return; }
+  list.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'song-card';
+    card.dataset.id = s.id;
+    const preview = (s.lyrics?.slice(0,80) + '…') || '';
+    const hasUrl = s.ytUrl && s.ytUrl !== '#';
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-num">TRACK ${String(i+1).padStart(2,'0')}</span>
+        <span class="card-title">${esc(s.title)}</span>
+        <span class="card-date">${s.date}</span>
+      </div>
+      <div class="card-tags">${s.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+      <div class="card-preview">${esc(preview)}</div>
+      <div class="card-footer">
+        ${hasUrl
+          ? `<a class="yt-link" href="${esc(s.ytUrl)}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>YouTube Music</a>`
+          : `<span style="font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--text-dim);">URL未設定</span>`
+        }
+        <button class="expand-btn" onclick="openModal(${s.id})">歌詞を見る →</button>
+      </div>`;
+    card.onclick = () => openModal(s.id);
+    grid.appendChild(card);
+  });
+  // 検索・絞り込みなしの全件表示時のみ並び替え有効
+  const isFiltered = activeTag.length > 0 || document.getElementById('searchInput').value.trim();
+  if (!isFiltered) {
+    if (gridSortable) gridSortable.destroy();
+    gridSortable = Sortable.create(grid, {
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      dragClass: 'sortable-drag',
+      delay: 100,
+      delayOnTouchOnly: true,
+      onEnd() {
+        const newOrder = [...grid.querySelectorAll('.song-card')].map(el => parseInt(el.dataset.id));
+        songs = newOrder.map(id => songs.find(s => s.id === id));
+        saveSongsToStorage(songs);
+        renderAll();
+        if (document.getElementById('adminPanel').classList.contains('open')) renderAdminList();
+      }
+    });
+  } else {
+    if (gridSortable) { gridSortable.destroy(); gridSortable = null; }
+  }
+}
+
+function renderAll() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let list = [...songs];
+  if (activeTag.length > 0) list = list.filter(s => s.tags.some(t => activeTag.some(a => a === t)));
+  if (q) list = list.filter(s => s.title.toLowerCase().includes(q) || s.lyrics.toLowerCase().includes(q));
+  renderGrid(list);
+  renderFilterTags();
+  document.getElementById('totalCount').textContent = songs.length;
+}
+
+// MODAL
+function openModal(id) {
+  const s = songs.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modalTitle').textContent = s.title;
+  document.getElementById('modalDate').textContent = s.date;
+  document.getElementById('modalTags').innerHTML = s.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  const lnk = document.getElementById('modalYtLink');
+  const hasUrl = s.ytUrl && s.ytUrl !== '#';
+  lnk.href = hasUrl ? s.ytUrl : '#';
+  lnk.className = 'yt-link-lg' + (hasUrl ? '' : ' disabled');
+  document.getElementById('modalBody').innerHTML = `<div class="lyrics-text">${esc(s.lyrics)}</div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeFull() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeFull();
+}
+
+// ADMIN
+let editingId = null;
+
+function toggleAdmin() {
+  const p = document.getElementById('adminPanel');
+  const b = document.getElementById('adminToggleBtn');
+  const isOpen = p.classList.contains('open');
+  if (isOpen) {
+    p.classList.remove('open');
+    b.textContent = '管理画面を開く';
+    b.classList.remove('active');
+    b.style.display = 'none';
+    return;
+  }
+  const pw = prompt('パスワードを入力してね');
+  if (pw === null) return;
+  if (pw !== 'take1410') {
+    alert('パスワードが違うよ！');
+    return;
+  }
+  p.classList.add('open');
+  b.textContent = '管理画面を閉じる';
+  b.classList.add('active');
+  renderAdminList();
+}
+
+let adminSortable = null;
+let gridSortable = null;
+
+function renderAdminList() {
+  const c = document.getElementById('adminSongList');
+  if (!songs.length) { c.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">まだ曲がありません</div>'; return; }
+  c.innerHTML = songs.map((s,i) => `
+    <div class="admin-song-row" data-id="${s.id}">
+      <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+      <span class="admin-song-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="admin-song-name">${esc(s.title)}</span>
+      <span class="admin-song-date">${s.date}</span>
+      <button class="btn-sm btn-edit" onclick="openEditForm(${s.id})">編集</button>
+      <button class="btn-sm btn-del" onclick="deleteSong(${s.id})">削除</button>
+    </div>`).join('');
+  if (adminSortable) adminSortable.destroy();
+  adminSortable = Sortable.create(c, {
+    handle: '.drag-handle',
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',
+    onEnd() {
+      const newOrder = [...c.querySelectorAll('.admin-song-row')].map(el => parseInt(el.dataset.id));
+      songs = newOrder.map(id => songs.find(s => s.id === id));
+      saveSongsToStorage(songs);
+      renderAdminList();
+      renderAll();
+    }
+  });
+}
+
+
+function openAddForm() {
+  editingId = null;
+  document.getElementById('formTitle').textContent = '新しい曲を追加';
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('fTags').value = '';
+  document.getElementById('fUrl').value = '';
+  document.getElementById('fLyrics').value = '';
+  document.getElementById('songForm').style.display = 'block';
+  document.getElementById('addNewWrap').style.display = 'none';
+  document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
+}
+
+function openEditForm(id) {
+  const s = songs.find(x => x.id === id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById('formTitle').textContent = '編集：' + s.title;
+  document.getElementById('fTitle').value = s.title;
+  document.getElementById('fDate').value = s.date;
+  document.getElementById('fTags').value = s.tags.join(', ');
+  document.getElementById('fUrl').value = (s.ytUrl === '#') ? '' : s.ytUrl;
+  document.getElementById('fLyrics').value = s.lyrics;
+  document.getElementById('songForm').style.display = 'block';
+  document.getElementById('addNewWrap').style.display = 'none';
+  document.getElementById('songForm').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelForm() {
+  document.getElementById('songForm').style.display = 'none';
+  document.getElementById('addNewWrap').style.display = 'block';
+  editingId = null;
+}
+
+
+function saveSong() {
+  const title  = document.getElementById('fTitle').value.trim();
+  const date   = document.getElementById('fDate').value;
+  const tags   = document.getElementById('fTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const url    = document.getElementById('fUrl').value.trim();
+  const lyrics = document.getElementById('fLyrics').value.trim();
+  if (!title) { showToast('タイトルを入力してね！'); return; }
+  if (editingId !== null) {
+    const idx = songs.findIndex(s => s.id === editingId);
+    if (idx !== -1) songs[idx] = { ...songs[idx], title, date, tags, ytUrl: url || '#', lyrics };
+  } else {
+    const newId = songs.length ? Math.max(...songs.map(s=>s.id)) + 1 : 1;
+    songs.push({ id: newId, title, date, tags, ytUrl: url || '#', lyrics });
+  }
+  saveSongsToStorage(songs);
+  cancelForm();
+  renderAdminList();
+  renderAll();
+  showToast(editingId !== null ? '更新したよ！' : '追加したよ！');
+  editingId = null;
+}
+
+function exportData() {
+  // トーストを消す
+  document.getElementById('toast').classList.remove('show');
+  document.getElementById('toast').textContent = '';
+  // 管理画面を閉じてからダウンロード
+  const p = document.getElementById('adminPanel');
+  const b = document.getElementById('adminToggleBtn');
+  p.classList.remove('open');
+  b.textContent = '管理画面を開く';
+  b.classList.remove('active');
+  // 現在のHTMLを取得してdefaultSongsの部分だけ書き換える
+  const currentHtml = document.documentElement.outerHTML;
+  const newData = JSON.stringify(songs);
+  const updated = currentHtml.replace(
+    /const defaultSongs = \[[\s\S]*?\];/,
+    'const defaultSongs = ' + newData + ';'
+  );
+  const blob = new Blob([updated], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lyrics.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('ダウンロードしたよ！Netlifyに上げてね');
+}
+
+function deleteSong(id) {
+  const s = songs.find(x => x.id === id);
+  if (!s || !confirm(`「${s.title}」を削除していい？`)) return;
+  songs = songs.filter(x => x.id !== id);
+  saveSongsToStorage(songs);
+  renderAdminList();
+  renderAll();
+  showToast('削除したよ！');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// SIDEBAR
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('sidebarOverlay');
+  const b = document.getElementById('hamburgerBtn');
+  const isOpen = s.classList.contains('open');
+  if (isOpen) {
+    closeSidebar();
+  } else {
+    s.classList.add('open');
+    o.classList.add('open');
+    b.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    renderSidebar();
+  }
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.getElementById('hamburgerBtn').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderSidebar() {
+  const tagsEl = document.getElementById('sidebarTags');
+  const tags = [...new Set(songs.flatMap(s => s.tags))];
+  tagsEl.innerHTML = `<button class="sidebar-tag${activeTag.length === 0 ? ' active' : ''}" data-tag="">ALL</button>` +
+    tags.map(t => `<button class="sidebar-tag${activeTag.includes(t) ? ' active' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
+  tagsEl.querySelectorAll('.sidebar-tag').forEach(btn => {
+    btn.addEventListener('click', () => setSidebarTag(btn.dataset.tag === '' ? null : btn.dataset.tag));
+  });
+  const filtered = activeTag.length > 0 ? songs.filter(s => s.tags.some(t => activeTag.some(a => a === t))) : songs;
+  const listEl = document.getElementById('sidebarSongList');
+  listEl.innerHTML = filtered.map((s, i) => `
+    <div class="sidebar-song-item" onclick="sidebarOpenSong(${s.id})">
+      <span class="sidebar-song-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="sidebar-song-name">${esc(s.title)}</span>
+      <span class="sidebar-song-tag">${esc(s.tags[0] || '')}</span>
+    </div>`).join('');
+}
+
+function setSidebarTag(tag) {
+  if (tag === null) {
+    activeTag = [];
+  } else if (activeTag.includes(tag)) {
+    activeTag = activeTag.filter(t => t !== tag);
+  } else {
+    activeTag = [...activeTag, tag];
+  }
+  renderAll();
+  renderSidebar();
+}
+
+function sidebarOpenSong(id) {
+  closeSidebar();
+  setTimeout(() => openModal(id), 300);
+}
+
+document.getElementById('sidebarSearch').addEventListener('input', function() {
+  document.getElementById('searchInput').value = this.value;
+  renderAll();
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFull(); closeSidebar(); } });
+document.getElementById('searchInput').addEventListener('input', renderAll);
+
+// 隠し管理画面ショートカット（6969）
+let keyBuffer = '';
+document.addEventListener('keydown', e => {
+  keyBuffer += e.key;
+  if (keyBuffer.length > 4) keyBuffer = keyBuffer.slice(-4);
+  if (keyBuffer === '6969') {
+    keyBuffer = '';
+    const btn = document.getElementById('adminToggleBtn');
+    btn.style.display = 'block';
+    toggleAdmin();
+  }
+});
+
+</body></html>
