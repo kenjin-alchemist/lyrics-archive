@@ -373,13 +373,15 @@ img[data-xh-highlight-nextpage] {
   <div class="admin-inner">
     <div class="admin-title-main">ADMIN PANEL <span>曲の追加・編集・削除</span></div>
 
-    <div class="admin-section-title">登録済みの曲</div>
-    <div id="adminTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-    <div id="adminSongList" style="margin-bottom:16px;"></div>
-    <div style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="admin-section-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0;">登録済みの曲</div>
       <div id="addNewWrap">
-        <button class="btn-save" onclick="openAddForm()">＋ 新しい曲を追加</button>
+        <button class="btn-save" onclick="openAddForm()" style="padding:6px 16px;font-size:11px;">＋ 新しい曲を追加</button>
       </div>
+    </div>
+    <div id="adminTagFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+    <div id="adminSongList" style="margin-bottom:8px;"></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:28px;">
       <button class="btn-cancel" onclick="exportSongData()" style="border-color:var(--gold);color:var(--gold);">📋 データをコピー（Claude共有用）</button>
     </div>
     <div id="exportMsg" style="display:none;font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--green);letter-spacing:0.15em;margin-bottom:16px;">✓ コピーしたよ！Claudeに貼り付けてね</div>
