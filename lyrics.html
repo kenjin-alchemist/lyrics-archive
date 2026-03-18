@@ -623,6 +623,7 @@ function openModal(id) {
   lnk.href=hasUrl?s.ytUrl:'#';lnk.className='yt-link-lg'+(hasUrl?'':' disabled');
   document.getElementById('modalBody').innerHTML=`<div class="lyrics-text">${esc(s.lyrics)}</div>`;
   document.getElementById('modalOverlay').classList.add('open');document.body.style.overflow='hidden';
+  document.getElementById('modal').scrollTop=0;
 }
 function closeFull(){document.getElementById('modalOverlay').classList.remove('open');document.body.style.overflow='';}
 function closeModal(e){if(e.target===document.getElementById('modalOverlay'))closeFull();}
