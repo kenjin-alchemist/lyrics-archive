@@ -411,8 +411,8 @@ img[data-xh-highlight-nextpage] {
         <input type="hidden" id="fTags">
       </div>
       <div class="form-group">
-        <label>YouTube Music URL</label>
-        <input type="text" id="fUrl" placeholder="例：https://music.youtube.com/...">
+        <label>楽曲URL（SpotifyなどのURL）</label>
+        <input type="text" id="fUrl" placeholder="例：https://open.spotify.com/...">
       </div>
       <div class="form-group">
         <label>歌詞（そのままコピペでOK）</label>
@@ -453,9 +453,9 @@ img[data-xh-highlight-nextpage] {
     <div class="modal-footer">
       <a class="yt-link-lg" id="modalYtLink" href="#" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-          <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/>
+          <circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="#000"/>
         </svg>
-        YouTube Music で聴く
+        聴く
       </a>
     </div>
   </div>
@@ -585,7 +585,7 @@ function renderGrid(list) {
       <div class="card-tags">${(s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
       <div class="card-preview">${esc(preview)}</div>
       <div class="card-footer">
-        ${hasUrl?`<a class="yt-link" href="${esc(s.ytUrl)}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>YouTube Music</a>`:`<span style="font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--text-dim);">URL未設定</span>`}
+        ${hasUrl?`<a class="yt-link" href="${esc(s.ytUrl)}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="#000"/></svg>聴く</a>`:''}
         <button class="expand-btn" onclick="openModal(${s.id})">歌詞を見る →</button>
       </div>`;
     card.onclick=()=>openModal(s.id);grid.appendChild(card);
@@ -620,7 +620,7 @@ function openModal(id) {
   document.getElementById('modalDate').textContent=s.date;
   document.getElementById('modalTags').innerHTML=(s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
   const lnk=document.getElementById('modalYtLink');const hasUrl=s.ytUrl&&s.ytUrl!=='#';
-  lnk.href=hasUrl?s.ytUrl:'#';lnk.className='yt-link-lg'+(hasUrl?'':' disabled');
+  lnk.href=hasUrl?s.ytUrl:'#';lnk.style.display=hasUrl?'flex':'none';
   document.getElementById('modalBody').innerHTML=`<div class="lyrics-text">${esc(s.lyrics)}</div>`;
   document.getElementById('modalOverlay').classList.add('open');document.body.style.overflow='hidden';
   document.getElementById('modal').scrollTop=0;
