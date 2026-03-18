@@ -595,7 +595,7 @@ function renderGrid(list) {
   const isFiltered=activeTag.length>0||document.getElementById('searchInput').value.trim();
   if(!isFiltered){
     if(gridSortable)gridSortable.destroy();
-    gridSortable=Sortable.create(grid,{animation:150,ghostClass:'sortable-ghost',dragClass:'sortable-drag',delay:100,delayOnTouchOnly:true,
+    gridSortable=Sortable.create(grid,{animation:150,ghostClass:'sortable-ghost',dragClass:'sortable-drag',delay:100,delayOnTouchOnly:true,filter:'.expand-btn,.yt-link',preventOnFilter:false,
       async onEnd(){
         const newOrder=[...grid.querySelectorAll('.song-card')].map(el=>parseInt(el.dataset.id));
         songs=newOrder.map(id=>songs.find(s=>s.id===id));
