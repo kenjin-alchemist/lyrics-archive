@@ -586,9 +586,11 @@ function renderGrid(list) {
       <div class="card-preview">${esc(preview)}</div>
       <div class="card-footer">
         ${hasUrl?`<a class="yt-link" href="${esc(s.ytUrl)}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="#000"/></svg>聴く</a>`:''}
-        <button class="expand-btn" onclick="openModal(${s.id})">歌詞を見る →</button>
+        <button class="expand-btn">歌詞を見る →</button>
       </div>`;
-    card.onclick=null;grid.appendChild(card);
+    card.onclick=null;
+    card.querySelector('.expand-btn').addEventListener('click', e => { e.stopPropagation(); openModal(s.id); });
+    grid.appendChild(card);
   });
   const isFiltered=activeTag.length>0||document.getElementById('searchInput').value.trim();
   if(!isFiltered){
